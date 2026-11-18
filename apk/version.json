@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0",
-  "versionCode": 1,
+  "versionName": "1.0.3",
+  "versionCode": 4,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "SageLedger build with automatic Google Wallet, credit card, and SMS purchase capture."
+  "notes": "Automated GitHub build v1.0.3 (commit 51ba0e6)."
 }
