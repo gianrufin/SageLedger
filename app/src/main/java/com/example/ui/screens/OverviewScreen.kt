@@ -628,7 +628,13 @@ private fun GitHubUpdateDialog(
                 onClick = onOpenRelease,
                 modifier = Modifier.testTag("github_update_open_button")
             ) {
-                Text("View release")
+                Text(
+                    if (notice.htmlUrl.endsWith(".apk", ignoreCase = true)) {
+                        "Download APK"
+                    } else {
+                        "View release"
+                    }
+                )
             }
         },
         dismissButton = {

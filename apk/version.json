@@ -1,0 +1,6 @@
+{
+  "versionName": "1.0",
+  "versionCode": 1,
+  "apkFile": "SageLedger-latest.apk",
+  "notes": "SageLedger build with automatic Google Wallet, credit card, and SMS purchase capture."
+}
