@@ -2,6 +2,7 @@ package com.example.ui.auth
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -57,6 +58,8 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.example.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -66,11 +69,15 @@ import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 @Composable
 fun AuthScreen(
@@ -82,10 +89,11 @@ fun AuthScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var visible by remember { mutableStateOf(false) }
+    var autoSignInJob by remember { mutableStateOf<Job?>(null) }
 
     LaunchedEffect(Unit) {
         visible = true
-        attemptAutoSignIn(
+        autoSignInJob = attemptAutoSignIn(
             context = context,
             credentialManager = credentialManager,
             onAuthSuccess = onAuthSuccess,
@@ -191,6 +199,8 @@ fun AuthScreen(
 
                 Button(
                     onClick = {
+                        autoSignInJob?.cancel()
+                        autoSignInJob = null
                         errorMessage = null
                         isLoading = true
                         onGoogleSignInClicked(
@@ -278,6 +288,12 @@ private fun FeatureRow(
     }
 }
 
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 private fun resolveDefaultWebClientId(context: Context): String? {
     val resId = context.resources.getIdentifier(
         "default_web_client_id",
@@ -296,22 +312,23 @@ fun attemptAutoSignIn(
     onAuthSuccess: () -> Unit,
     onUnauthenticated: () -> Unit,
     scope: CoroutineScope
-) {
+): Job? {
     if (FirebaseApp.getApps(context).isEmpty()) {
         onUnauthenticated()
-        return
+        return null
     }
     if (Firebase.auth.currentUser != null) {
         onAuthSuccess()
-        return
+        return null
     }
     val clientId = resolveDefaultWebClientId(context)
     if (clientId == null) {
         onUnauthenticated()
-        return
+        return null
     }
+    val hostContext = context.findActivity() ?: context
 
-    scope.launch {
+    return scope.launch {
         try {
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(true)
@@ -321,14 +338,20 @@ fun attemptAutoSignIn(
             val request = GetCredentialRequest.Builder()
                 .addCredentialOption(googleIdOption)
                 .build()
-            val cred = credentialManager.getCredential(context, request).credential
+            val cred = withTimeout(8_000L) {
+                credentialManager.getCredential(hostContext, request)
+            }.credential
             if (cred is CustomCredential && cred.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val token = GoogleIdTokenCredential.createFrom(cred.data).idToken
-                Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
+                withTimeout(15_000L) {
+                    Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
+                }
                 onAuthSuccess()
             } else {
                 onUnauthenticated()
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             onUnauthenticated()
         }
@@ -352,33 +375,87 @@ fun onGoogleSignInClicked(
         onAuthError("Google Sign-In configuration missing: default_web_client_id not found")
         return
     }
-    val activity = context as? Activity
+    val activity = context.findActivity()
     if (activity == null) {
         onAuthError("Unable to launch sign-in from current context.")
         return
     }
-    val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = clientId).build()
-    val request = GetCredentialRequest.Builder()
-        .addCredentialOption(signInOption)
-        .build()
 
     scope.launch {
+        var settled = false
         try {
-            val cred = credentialManager.getCredential(activity, request).credential
+            val cred = requestGoogleCredentialWithFallback(
+                activity = activity,
+                credentialManager = credentialManager,
+                clientId = clientId
+            )
             if (cred is CustomCredential && cred.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val token = GoogleIdTokenCredential.createFrom(cred.data).idToken
-                Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
+                withTimeout(15_000L) {
+                    Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
+                }
+                settled = true
                 onAuthSuccess()
             } else {
+                settled = true
                 onAuthError("Unexpected credential type returned.")
             }
         } catch (e: GetCredentialCancellationException) {
             Log.w("Auth", "Google Sign-In flow cancelled or dismissed: ${e.message}", e)
+            settled = true
             onAuthCancelled()
+        } catch (e: TimeoutCancellationException) {
+            Log.w("Auth", "Google Sign-In timed out waiting for Credential Manager / Firebase", e)
+            settled = true
+            onAuthError("Google Sign-In timed out. Check your internet connection and Google Play Services, then try again.")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: GetCredentialException) {
+            Log.e("Auth", "Google Sign-In credential error (${e.type}): ${e.message}", e)
+            settled = true
+            onAuthError(e.errorMessage?.toString()?.takeIf { it.isNotBlank() } ?: e.localizedMessage ?: "Sign in failed (${e.type})")
         } catch (e: Exception) {
             Log.e("Auth", "Google Sign-In failed", e)
+            settled = true
             onAuthError(e.localizedMessage ?: "Sign in failed")
+        } finally {
+            if (!settled) {
+                onAuthCancelled()
+            }
         }
+    }
+}
+
+private suspend fun requestGoogleCredentialWithFallback(
+    activity: Activity,
+    credentialManager: CredentialManager,
+    clientId: String
+) = try {
+    val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = clientId).build()
+    val request = GetCredentialRequest.Builder()
+        .addCredentialOption(signInOption)
+        .build()
+    withTimeout(15_000L) {
+        credentialManager.getCredential(activity, request).credential
+    }
+} catch (e: GetCredentialCancellationException) {
+    throw e
+} catch (e: Exception) {
+    if (e is TimeoutCancellationException || e is NoCredentialException || e is GetCredentialException) {
+        Log.w("Auth", "Primary Sign-In with Google prompt fell back (${e.javaClass.simpleName}): ${e.message}")
+        val fallbackOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(clientId)
+            .setAutoSelectEnabled(false)
+            .build()
+        val fallbackRequest = GetCredentialRequest.Builder()
+            .addCredentialOption(fallbackOption)
+            .build()
+        withTimeout(20_000L) {
+            credentialManager.getCredential(activity, fallbackRequest).credential
+        }
+    } else {
+        throw e
     }
 }
 
@@ -394,7 +471,7 @@ fun performSignOut(
             } catch (e: Exception) {
                 Log.w("Auth", "Failed to clear credential state: ${e.message}")
             } finally {
-                Firebase.auth.signOut()
+                runCatching { Firebase.auth.signOut() }
                 onSignOutComplete()
             }
         }

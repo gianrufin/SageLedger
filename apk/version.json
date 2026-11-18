@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0.3",
-  "versionCode": 4,
+  "versionName": "1.0.4",
+  "versionCode": 5,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "Automated GitHub build v1.0.3 (commit 51ba0e6)."
+  "notes": "Fix Google Sign-In loading hang with Credential Manager timeouts, Activity unwrapping, and fallback credential flow."
 }
