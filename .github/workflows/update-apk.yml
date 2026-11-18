@@ -40,6 +40,7 @@ jobs:
           gradle-version: '9.3.1'
 
       - name: Materialize debug keystore & Google services config
+        id: config
         env:
           DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
@@ -58,6 +59,13 @@ jobs:
             printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
           fi
 
+          if [ -f app/google-services.json ]; then
+            echo "has_google_services=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_google_services=false" >> "$GITHUB_OUTPUT"
+            echo "Notice: app/google-services.json is not present. Skipping apk/ overwrite so the prebuilt Firebase-configured APK in apk/ is preserved."
+          fi
+
       - name: Compute build version
         id: version
         run: |
@@ -70,13 +78,14 @@ jobs:
           echo "version_name=$VER_NAME" >> "$GITHUB_OUTPUT"
           echo "version_code=$VER_CODE" >> "$GITHUB_OUTPUT"
 
-      - name: Build Debug APK
+      - name: Build Debug APK & Run Unit Tests
         run: |
-          gradle :app:assembleDebug \
+          gradle :app:assembleDebug :app:testDebugUnitTest \
             -PsageVersionName="${{ steps.version.outputs.version_name }}" \
             -PsageVersionCode="${{ steps.version.outputs.version_code }}"
 
       - name: Update apk download folder
+        if: steps.config.outputs.has_google_services == 'true'
         run: |
           mkdir -p apk
           cp app/build/outputs/apk/debug/app-debug.apk apk/SageLedger-latest.apk
@@ -90,7 +99,7 @@ jobs:
           EOF
 
       - name: Commit updated APK to repo
-        if: github.event_name != 'release'
+        if: github.event_name != 'release' && steps.config.outputs.has_google_services == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -104,4 +113,4 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: SageLedger-v${{ steps.version.outputs.version_name }}
-          path: apk/SageLedger-latest.apk
+          path: app/build/outputs/apk/debug/app-debug.apk

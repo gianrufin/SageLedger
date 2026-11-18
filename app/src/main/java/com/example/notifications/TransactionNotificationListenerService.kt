@@ -12,6 +12,7 @@ import com.example.data.categorization.MerchantCategorizer
 import com.example.data.categorization.PurchaseNotificationParser
 import com.example.data.repository.LedgerRepository
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -54,6 +55,10 @@ class TransactionNotificationListenerService : NotificationListenerService() {
         recentFingerprints[fingerprint] = now
         cleanupStaleFingerprints(now)
 
+        if (FirebaseApp.getApps(applicationContext).isEmpty()) {
+            Log.w(TAG, "Ignoring notification capture because FirebaseApp is not initialized.")
+            return
+        }
         val uid = Firebase.auth.currentUser?.uid
         if (uid.isNullOrBlank()) {
             Log.d(TAG, "Ignoring notification capture while user is signed out.")
