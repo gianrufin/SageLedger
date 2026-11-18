@@ -98,6 +98,22 @@ class LedgerLogicUnitTest {
     }
 
     @Test
+    fun moshiParsesApkManifestAndReleaseDtos() {
+        val moshi = com.squareup.moshi.Moshi.Builder()
+            .addLast(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
+            .build()
+        val manifestJson = """
+            {"versionName":"1.0.2","versionCode":3,"apkFile":"SageLedger-latest.apk","notes":"New build"}
+        """.trimIndent()
+        val manifest = moshi.adapter(com.example.data.remote.RepoApkManifestDto::class.java)
+            .fromJson(manifestJson)
+        assertNotNull(manifest)
+        assertEquals("1.0.2", manifest?.versionName)
+        assertEquals(3, manifest?.versionCode)
+        assertEquals("SageLedger-latest.apk", manifest?.apkFile)
+    }
+
+    @Test
     fun savingsProjectionComputesExpectedMonthEndTrajectory() {
         val cal = Calendar.getInstance().apply {
             set(Calendar.YEAR, 2026)

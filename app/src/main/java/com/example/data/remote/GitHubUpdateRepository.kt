@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.BuildConfig
 import com.example.data.model.GitHubReleaseNotice
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CancellationException
@@ -20,13 +19,11 @@ import retrofit2.http.Path
 import retrofit2.http.Url
 import java.util.concurrent.TimeUnit
 
-@JsonClass(generateAdapter = true)
 data class GitHubReleaseAssetDto(
     @Json(name = "name") val name: String? = null,
     @Json(name = "browser_download_url") val browserDownloadUrl: String? = null
 )
 
-@JsonClass(generateAdapter = true)
 data class GitHubReleaseDto(
     @Json(name = "tag_name") val tagName: String? = null,
     @Json(name = "name") val name: String? = null,
@@ -37,7 +34,6 @@ data class GitHubReleaseDto(
     @Json(name = "assets") val assets: List<GitHubReleaseAssetDto> = emptyList()
 )
 
-@JsonClass(generateAdapter = true)
 data class RepoApkManifestDto(
     @Json(name = "versionName") val versionName: String? = null,
     @Json(name = "versionCode") val versionCode: Int = 0,
