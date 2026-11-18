@@ -7,76 +7,119 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+data class LedgerExtraColors(
+    val heroGradientTop: Color,
+    val heroGradientMid: Color,
+    val heroGradientBottom: Color,
+    val contrastPillBg: Color,
+    val contrastPillText: Color,
+    val hairlineBorder: Color,
+    val positiveGreen: Color,
+    val positiveGreenContainer: Color,
+    val onPositiveGreenContainer: Color,
+    val expenseCoral: Color
+)
+
+private val LightExtraColors = LedgerExtraColors(
+    heroGradientTop = IrisHeroTop,
+    heroGradientMid = IrisHeroMid,
+    heroGradientBottom = IrisHeroBottom,
+    contrastPillBg = ObsidianBannerSurface,
+    contrastPillText = ObsidianBannerText,
+    hairlineBorder = HairlineBorderLight,
+    positiveGreen = VividMintSecondary,
+    positiveGreenContainer = MintSecondaryContainer,
+    onPositiveGreenContainer = OnMintSecondaryContainer,
+    expenseCoral = CrispCoralError
+)
+
+private val DarkExtraColors = LedgerExtraColors(
+    heroGradientTop = IrisDarkHeroTop,
+    heroGradientMid = IrisDarkHeroMid,
+    heroGradientBottom = IrisDarkHeroBottom,
+    contrastPillBg = Color(0xFF222938),
+    contrastPillText = CrispFrostInk,
+    hairlineBorder = HairlineBorderDark,
+    positiveGreen = LuminousMintDark,
+    positiveGreenContainer = DarkMintContainer,
+    onPositiveGreenContainer = OnDarkMintContainer,
+    expenseCoral = LuminousCoralDark
+)
+
+val LocalLedgerExtraColors = staticCompositionLocalOf { LightExtraColors }
+
 private val SageLightColorScheme = lightColorScheme(
-    primary = MutedSagePrimary,
+    primary = ElectricIrisPrimary,
     onPrimary = Color.White,
-    primaryContainer = SagePrimaryContainer,
-    onPrimaryContainer = OnSagePrimaryContainer,
-    secondary = MossSecondary,
+    primaryContainer = IrisPrimaryContainer,
+    onPrimaryContainer = OnIrisPrimaryContainer,
+    secondary = VividMintSecondary,
     onSecondary = Color.White,
-    secondaryContainer = MossSecondaryContainer,
-    onSecondaryContainer = OnMossSecondaryContainer,
-    tertiary = WarmAmberTertiary,
+    secondaryContainer = MintSecondaryContainer,
+    onSecondaryContainer = OnMintSecondaryContainer,
+    tertiary = SunnyTangerineTertiary,
     onTertiary = Color.White,
-    tertiaryContainer = WarmAmberContainer,
-    onTertiaryContainer = OnWarmAmberContainer,
-    error = TerracottaError,
+    tertiaryContainer = TangerineContainer,
+    onTertiaryContainer = OnTangerineContainer,
+    error = CrispCoralError,
     onError = Color.White,
-    errorContainer = TerracottaContainer,
-    onErrorContainer = OnTerracottaContainer,
-    background = AlabasterCanvas,
-    onBackground = ForestCharcoal,
-    surface = SoftStoneSurface,
-    onSurface = ForestCharcoal,
-    surfaceVariant = MutedStoneContainer,
-    onSurfaceVariant = SlateSageText,
-    surfaceContainerLowest = SoftStoneSurface,
-    surfaceContainerLow = Color(0xFFF3F4F0),
-    surfaceContainer = MutedStoneContainer,
-    surfaceContainerHigh = SubtleStoneHigh,
-    surfaceContainerHighest = Color(0xFFDADFD6),
-    outline = SageOutline,
-    outlineVariant = SageOutlineVariant
+    errorContainer = CoralContainer,
+    onErrorContainer = OnCoralContainer,
+    background = StudioCanvasLight,
+    onBackground = InkCharcoal,
+    surface = PureCardWhite,
+    onSurface = InkCharcoal,
+    surfaceVariant = SoftPillContainer,
+    onSurfaceVariant = MutedSlateText,
+    surfaceContainerLowest = PureCardWhite,
+    surfaceContainerLow = Color(0xFFF9FAFC),
+    surfaceContainer = SoftPillContainer,
+    surfaceContainerHigh = SoftTrackHigh,
+    surfaceContainerHighest = Color(0xFFD9DDE8),
+    outline = OutlineLight,
+    outlineVariant = HairlineBorderLight
 )
 
 private val SageDarkColorScheme = darkColorScheme(
-    primary = LuminousSagePrimary,
-    onPrimary = Color(0xFF0E251B),
-    primaryContainer = DarkSagePrimaryContainer,
-    onPrimaryContainer = OnDarkSagePrimaryContainer,
-    secondary = DarkMossSecondary,
-    onSecondary = Color(0xFF13271E),
-    secondaryContainer = DarkMossContainer,
-    onSecondaryContainer = OnDarkMossContainer,
-    tertiary = DarkAmberTertiary,
-    onTertiary = Color(0xFF2D1D09),
-    tertiaryContainer = DarkAmberContainer,
-    onTertiaryContainer = OnDarkAmberContainer,
-    error = DarkTerracottaError,
-    onError = Color(0xFF39110D),
-    errorContainer = DarkTerracottaContainer,
-    onErrorContainer = OnDarkTerracottaContainer,
-    background = PineSlateDarkCanvas,
-    onBackground = MistInk,
-    surface = CharcoalSurface,
-    onSurface = MistInk,
-    surfaceVariant = CharcoalSurfaceHigh,
-    onSurfaceVariant = MutedMistText,
-    surfaceContainerLowest = Color(0xFF0D1210),
-    surfaceContainerLow = Color(0xFF151C19),
-    surfaceContainer = CharcoalSurface,
-    surfaceContainerHigh = CharcoalSurfaceHigh,
-    surfaceContainerHighest = CharcoalSurfaceHighest,
-    outline = DarkSageOutline,
-    outlineVariant = DarkSageOutlineVariant
+    primary = LuminousIrisDark,
+    onPrimary = Color(0xFF150D48),
+    primaryContainer = DarkIrisContainer,
+    onPrimaryContainer = OnDarkIrisContainer,
+    secondary = LuminousMintDark,
+    onSecondary = Color(0xFF062C17),
+    secondaryContainer = DarkMintContainer,
+    onSecondaryContainer = OnDarkMintContainer,
+    tertiary = LuminousTangerineDark,
+    onTertiary = Color(0xFF391900),
+    tertiaryContainer = DarkTangerineContainer,
+    onTertiaryContainer = OnDarkTangerineContainer,
+    error = LuminousCoralDark,
+    onError = Color(0xFF420A07),
+    errorContainer = DarkCoralContainer,
+    onErrorContainer = OnDarkCoralContainer,
+    background = ObsidianCanvasDark,
+    onBackground = CrispFrostInk,
+    surface = SlateCardDark,
+    onSurface = CrispFrostInk,
+    surfaceVariant = SlateContainerDark,
+    onSurfaceVariant = MutedFrostText,
+    surfaceContainerLowest = Color(0xFF090B10),
+    surfaceContainerLow = Color(0xFF12161E),
+    surfaceContainer = SlateContainerDark,
+    surfaceContainerHigh = SlateTrackDark,
+    surfaceContainerHighest = Color(0xFF333E52),
+    outline = OutlineDark,
+    outlineVariant = HairlineBorderDark
 )
 
 val SageShapes = Shapes(
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(16.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(18.dp),
     large = RoundedCornerShape(22.dp),
     extraLarge = RoundedCornerShape(28.dp)
 )
@@ -87,10 +130,13 @@ fun SageLedgerTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) SageDarkColorScheme else SageLightColorScheme
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = SageTypography,
-        shapes = SageShapes,
-        content = content
-    )
+    val extraColors = if (darkTheme) DarkExtraColors else LightExtraColors
+    CompositionLocalProvider(LocalLedgerExtraColors provides extraColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = SageTypography,
+            shapes = SageShapes,
+            content = content
+        )
+    }
 }

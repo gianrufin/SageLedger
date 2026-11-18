@@ -7,6 +7,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,30 +18,35 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Analytics
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Savings
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
@@ -46,10 +54,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -57,11 +62,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -88,8 +96,10 @@ import com.example.ui.components.springPressScale
 import com.example.ui.screens.AddRecurringPresetDialog
 import com.example.ui.screens.ManualEntrySheet
 import com.example.ui.screens.OverviewScreen
+import com.example.ui.screens.PlanScreen
 import com.example.ui.screens.ReportsScreen
 import com.example.ui.screens.SettingsScreen
+import com.example.ui.theme.LocalLedgerExtraColors
 import com.example.ui.theme.SageLedgerTheme
 import com.example.ui.viewmodel.LedgerViewModel
 import com.google.firebase.Firebase
@@ -104,6 +114,7 @@ import kotlinx.coroutines.flow.callbackFlow
 
 private const val ROUTE_OVERVIEW = "overview"
 private const val ROUTE_REPORTS = "reports"
+private const val ROUTE_PLAN = "plan"
 private const val ROUTE_SETTINGS = "settings"
 
 internal fun FirebaseAuth.authStateFlow(): Flow<FirebaseUser?> = callbackFlow {
@@ -121,7 +132,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Configure App Check with launch intent before rendering UI or creating ViewModels
         configureAppCheck(this, intent)
         enableEdgeToEdge()
         deepLinkTransactionId = intent?.getStringExtra(SpendingAlertNotifier.EXTRA_TRANSACTION_ID)
@@ -181,8 +191,13 @@ private fun SageLedgerRoot(
         AuthScreen(onAuthSuccess = {})
     } else {
         key(user.uid) {
+            val initial = remember(user.displayName, user.email) {
+                (user.displayName?.takeIf { it.isNotBlank() } ?: user.email ?: "S")
+                    .firstOrNull()?.uppercaseChar()?.toString() ?: "S"
+            }
             AuthenticatedLedgerShell(
                 currentUserId = user.uid,
+                userInitial = initial,
                 deepLinkTransactionId = deepLinkTransactionId,
                 onConsumeDeepLink = onConsumeDeepLink
             )
@@ -240,10 +255,10 @@ private data class NavDestinationItem(
     val testTag: String
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AuthenticatedLedgerShell(
     currentUserId: String,
+    userInitial: String,
     deepLinkTransactionId: String?,
     onConsumeDeepLink: () -> Unit
 ) {
@@ -291,6 +306,7 @@ private fun AuthenticatedLedgerShell(
 
     val dashboardData = (dashboardState as? com.example.ui.viewmodel.UiState.Success)?.data
     val currencyCode = dashboardData?.settings?.currencyCode ?: "USD"
+    val monthlyBudgetCents = dashboardData?.settings?.monthlyBudgetCents ?: 0L
     val merchantRules = dashboardData?.merchantRules.orEmpty()
 
     LaunchedEffect(deepLinkTransactionId, dashboardData) {
@@ -325,6 +341,13 @@ private fun AuthenticatedLedgerShell(
                 testTag = "nav_reports"
             ),
             NavDestinationItem(
+                route = ROUTE_PLAN,
+                labelRes = R.string.nav_plan,
+                selectedIcon = Icons.Rounded.Savings,
+                unselectedIcon = Icons.Outlined.Savings,
+                testTag = "nav_plan"
+            ),
+            NavDestinationItem(
                 route = ROUTE_SETTINGS,
                 labelRes = R.string.nav_settings,
                 selectedIcon = Icons.Rounded.Settings,
@@ -344,6 +367,11 @@ private fun AuthenticatedLedgerShell(
         }
     }
 
+    val openNewExpense: () -> Unit = {
+        editingTransaction = null
+        showManualEntrySheet = true
+    }
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val useNavRail = maxWidth >= 600.dp
 
@@ -351,8 +379,26 @@ private fun AuthenticatedLedgerShell(
             if (useNavRail) {
                 NavigationRail(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
+                    header = {
+                        FloatingActionButton(
+                            onClick = openNewExpense,
+                            shape = CircleShape,
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .springPressScale()
+                                .testTag("fab_add_expense")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Record purchase or cash spend"
+                            )
+                        }
+                    }
                 ) {
+                    Spacer(modifier = Modifier.height(12.dp))
                     navItems.forEach { item ->
                         val selected = currentRoute == item.route
                         val label = stringResource(item.labelRes)
@@ -374,72 +420,13 @@ private fun AuthenticatedLedgerShell(
 
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background,
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-                contentWindowInsets = WindowInsets.safeDrawing,
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            val titleText = when (currentRoute) {
-                                ROUTE_REPORTS -> "Spending Reports"
-                                ROUTE_SETTINGS -> "Preferences"
-                                else -> stringResource(R.string.app_name)
-                            }
-                            Text(
-                                text = titleText,
-                                style = MaterialTheme.typography.headlineSmall
-                            )
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.background,
-                            titleContentColor = MaterialTheme.colorScheme.onBackground
-                        )
+                snackbarHost = {
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier.padding(bottom = if (useNavRail) 12.dp else 84.dp)
                     )
                 },
-                floatingActionButton = {
-                    if (currentRoute != ROUTE_SETTINGS) {
-                        FloatingActionButton(
-                            onClick = {
-                                editingTransaction = null
-                                showManualEntrySheet = true
-                            },
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .springPressScale()
-                                .testTag("fab_add_expense")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add,
-                                contentDescription = "Record purchase or cash spend"
-                            )
-                        }
-                    }
-                },
-                bottomBar = {
-                    if (!useNavRail) {
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            windowInsets = WindowInsets.navigationBars
-                        ) {
-                            navItems.forEach { item ->
-                                val selected = currentRoute == item.route
-                                val label = stringResource(item.labelRes)
-                                NavigationBarItem(
-                                    selected = selected,
-                                    onClick = { navigateToTab(item.route) },
-                                    icon = {
-                                        Icon(
-                                            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                            contentDescription = label
-                                        )
-                                    },
-                                    label = { Text(label) },
-                                    modifier = Modifier.testTag(item.testTag)
-                                )
-                            }
-                        }
-                    }
-                }
+                contentWindowInsets = WindowInsets(0, 0, 0, 0)
             ) { innerPadding ->
                 Box(
                     modifier = Modifier
@@ -462,11 +449,12 @@ private fun AuthenticatedLedgerShell(
                                     editingTransaction = tx
                                     showManualEntrySheet = true
                                 },
-                                onManualEntryClick = {
-                                    editingTransaction = null
-                                    showManualEntrySheet = true
-                                },
-                                onDismissUpdate = { perm -> viewModel.dismissUpdateNotice(perm) }
+                                onManualEntryClick = openNewExpense,
+                                onDismissUpdate = { perm -> viewModel.dismissUpdateNotice(perm) },
+                                userInitial = userInitial,
+                                onNavigateToReports = { navigateToTab(ROUTE_REPORTS) },
+                                onNavigateToPlan = { navigateToTab(ROUTE_PLAN) },
+                                onNavigateToSettings = { navigateToTab(ROUTE_SETTINGS) }
                             )
                         }
 
@@ -475,8 +463,22 @@ private fun AuthenticatedLedgerShell(
                                 state = reportState,
                                 selectedPeriod = selectedPeriod,
                                 currencyCode = currencyCode,
+                                monthlyBudgetCents = monthlyBudgetCents,
                                 onSelectPeriod = { viewModel.selectPeriod(it) },
                                 onSelectCustomRange = { s, e -> viewModel.setCustomDateRange(s, e) }
+                            )
+                        }
+
+                        composable(ROUTE_PLAN) {
+                            PlanScreen(
+                                state = dashboardState,
+                                onSaveCategoryBudget = { cat, limit ->
+                                    viewModel.saveCategoryBudget(cat, limit)
+                                },
+                                onQuickAddPreset = { preset -> viewModel.quickAddPreset(preset) },
+                                onDeletePreset = { viewModel.deleteRecurringPreset(it) },
+                                onAddPresetClicked = { showAddPresetDialog = true },
+                                onOpenSettings = { navigateToTab(ROUTE_SETTINGS) }
                             )
                         }
 
@@ -506,6 +508,16 @@ private fun AuthenticatedLedgerShell(
                                 }
                             )
                         }
+                    }
+
+                    if (!useNavRail) {
+                        PlayfulDockedBottomBar(
+                            items = navItems,
+                            currentRoute = currentRoute,
+                            onSelectRoute = navigateToTab,
+                            onAddClick = openNewExpense,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
                     }
                 }
             }
@@ -551,6 +563,131 @@ private fun AuthenticatedLedgerShell(
                 viewModel.addRecurringPreset(label, merchant, cents, category, source)
             },
             onDismiss = { showAddPresetDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun PlayfulDockedBottomBar(
+    items: List<NavDestinationItem>,
+    currentRoute: String,
+    onSelectRoute: (String) -> Unit,
+    onAddClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val extraColors = LocalLedgerExtraColors.current
+    val leftItems = items.take(2)
+    val rightItems = items.drop(2)
+
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Surface(
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, extraColors.hairlineBorder),
+            shadowElevation = 10.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                leftItems.forEach { item ->
+                    DockedNavTab(
+                        item = item,
+                        selected = currentRoute == item.route,
+                        onClick = { onSelectRoute(item.route) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Space reserved under the centered raised + button
+                Spacer(modifier = Modifier.width(68.dp))
+
+                rightItems.forEach { item ->
+                    DockedNavTab(
+                        item = item,
+                        selected = currentRoute == item.route,
+                        onClick = { onSelectRoute(item.route) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        // Raised centered circular + button sitting proud above the dock
+        FloatingActionButton(
+            onClick = onAddClick,
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 6.dp,
+                pressedElevation = 10.dp
+            ),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = (-20).dp)
+                .size(58.dp)
+                .springPressScale()
+                .testTag("fab_add_expense")
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Add,
+                contentDescription = "Record purchase or cash spend",
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun DockedNavTab(
+    item: NavDestinationItem,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val label = stringResource(item.labelRes)
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Column(
+        modifier = modifier
+            .defaultMinSize(minHeight = 48.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+            .padding(vertical = 4.dp)
+            .testTag(item.testTag),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Icon(
+            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+            contentDescription = label,
+            tint = contentColor,
+            modifier = Modifier.size(22.dp)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+            ),
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

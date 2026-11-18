@@ -383,13 +383,16 @@ fun ManualEntrySheet(
                         }
                     }
                 },
-                shape = MaterialTheme.shapes.medium,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(54.dp)
                     .testTag("save_transaction_button")
             ) {
-                Text(if (editingTransaction == null) "Save Spending" else "Confirm & Update")
+                Text(
+                    text = if (editingTransaction == null) "Save Spending" else "Confirm & Update",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))

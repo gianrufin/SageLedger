@@ -2,64 +2,73 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Sage Slate Light Palette
-val AlabasterCanvas = Color(0xFFF7F7F4)
-val SoftStoneSurface = Color(0xFFFFFFFF)
-val MutedStoneContainer = Color(0xFFECEEE8)
-val SubtleStoneHigh = Color(0xFFE3E7DF)
-val ForestCharcoal = Color(0xFF19211D)
-val SlateSageText = Color(0xFF536159)
-val SageOutline = Color(0xFFCBD3CC)
-val SageOutlineVariant = Color(0xFFDFE4DD)
+// Playful Crisp Light Palette (Mockup-inspired)
+val StudioCanvasLight = Color(0xFFF6F7FA)
+val PureCardWhite = Color(0xFFFFFFFF)
+val SoftPillContainer = Color(0xFFEEF0F6)
+val SoftTrackHigh = Color(0xFFE4E7F0)
+val InkCharcoal = Color(0xFF14151A)
+val MutedSlateText = Color(0xFF6B7280)
+val HairlineBorderLight = Color(0xFFE9ECF2)
+val OutlineLight = Color(0xFFD0D5E0)
 
-val MutedSagePrimary = Color(0xFF436455)
-val SagePrimaryContainer = Color(0xFFD3E5DA)
-val OnSagePrimaryContainer = Color(0xFF102A1E)
+val ElectricIrisPrimary = Color(0xFF6D5DF6)
+val IrisHeroTop = Color(0xFF7B61FF)
+val IrisHeroMid = Color(0xFF6A58F4)
+val IrisHeroBottom = Color(0xFF5384FF)
+val IrisPrimaryContainer = Color(0xFFEDE9FE)
+val OnIrisPrimaryContainer = Color(0xFF2B1E78)
 
-val MossSecondary = Color(0xFF5A7569)
-val MossSecondaryContainer = Color(0xFFDDE8E1)
-val OnMossSecondaryContainer = Color(0xFF182C23)
+val VividMintSecondary = Color(0xFF1FB965)
+val MintSecondaryContainer = Color(0xFFDCF7E7)
+val OnMintSecondaryContainer = Color(0xFF0A4726)
 
-val WarmAmberTertiary = Color(0xFF9E7038)
-val WarmAmberContainer = Color(0xFFF4E4CE)
-val OnWarmAmberContainer = Color(0xFF332008)
+val SunnyTangerineTertiary = Color(0xFFFF7A1A)
+val TangerineContainer = Color(0xFFFFECDD)
+val OnTangerineContainer = Color(0xFF5C2800)
 
-val TerracottaError = Color(0xFFB34E42)
-val TerracottaContainer = Color(0xFFF6DCD8)
-val OnTerracottaContainer = Color(0xFF3D130E)
+val CrispCoralError = Color(0xFFEF4444)
+val CoralContainer = Color(0xFFFEE4E2)
+val OnCoralContainer = Color(0xFF69120F)
 
-// Sage Slate Dark Palette
-val PineSlateDarkCanvas = Color(0xFF101513)
-val CharcoalSurface = Color(0xFF18201D)
-val CharcoalSurfaceHigh = Color(0xFF212B27)
-val CharcoalSurfaceHighest = Color(0xFF2B3732)
-val MistInk = Color(0xFFE6ECE8)
-val MutedMistText = Color(0xFFA7B5AD)
-val DarkSageOutline = Color(0xFF394740)
-val DarkSageOutlineVariant = Color(0xFF28332E)
+val ObsidianBannerSurface = Color(0xFF131418)
+val ObsidianBannerText = Color(0xFFFFFFFF)
 
-val LuminousSagePrimary = Color(0xFF8AB59F)
-val DarkSagePrimaryContainer = Color(0xFF29483A)
-val OnDarkSagePrimaryContainer = Color(0xFFD6EDE1)
+// Crisp Obsidian Dark Palette
+val ObsidianCanvasDark = Color(0xFF0D1016)
+val SlateCardDark = Color(0xFF161B24)
+val SlateContainerDark = Color(0xFF1E2531)
+val SlateTrackDark = Color(0xFF283141)
+val CrispFrostInk = Color(0xFFF1F4FA)
+val MutedFrostText = Color(0xFF9BA5B8)
+val HairlineBorderDark = Color(0xFF262E3D)
+val OutlineDark = Color(0xFF394356)
 
-val DarkMossSecondary = Color(0xFFA3BFB1)
-val DarkMossContainer = Color(0xFF2C3E35)
-val OnDarkMossContainer = Color(0xFFDCEBE3)
+val LuminousIrisDark = Color(0xFF9285FF)
+val IrisDarkHeroTop = Color(0xFF3A2D8E)
+val IrisDarkHeroMid = Color(0xFF2B246D)
+val IrisDarkHeroBottom = Color(0xFF1F386E)
+val DarkIrisContainer = Color(0xFF2B255D)
+val OnDarkIrisContainer = Color(0xFFE6E1FF)
 
-val DarkAmberTertiary = Color(0xFFD9AA72)
-val DarkAmberContainer = Color(0xFF4A3419)
-val OnDarkAmberContainer = Color(0xFFFBE7CE)
+val LuminousMintDark = Color(0xFF3DD683)
+val DarkMintContainer = Color(0xFF143D28)
+val OnDarkMintContainer = Color(0xFFCFF7DF)
 
-val DarkTerracottaError = Color(0xFFE38579)
-val DarkTerracottaContainer = Color(0xFF56231D)
-val OnDarkTerracottaContainer = Color(0xFFFCE0DC)
+val LuminousTangerineDark = Color(0xFFFF984D)
+val DarkTangerineContainer = Color(0xFF4B280D)
+val OnDarkTangerineContainer = Color(0xFFFFE4CE)
 
-// Soothing Category Chart Colors
-val CatFoodColor = Color(0xFF567D6B)
-val CatGroceriesColor = Color(0xFF7FA38D)
-val CatTransportColor = Color(0xFF617B8C)
-val CatConvenienceColor = Color(0xFFB88D56)
-val CatGadgetsColor = Color(0xFF6C6A8A)
-val CatUtilitiesColor = Color(0xFF8A7A68)
-val CatShoppingColor = Color(0xFF9C6D6B)
-val CatOtherColor = Color(0xFF7D8A83)
+val LuminousCoralDark = Color(0xFFFF6E66)
+val DarkCoralContainer = Color(0xFF531B1A)
+val OnDarkCoralContainer = Color(0xFFFFDAD6)
+
+// Lively Distinct Category Chart Colors
+val CatFoodColor = Color(0xFFFF7A1A)        // Vivid Tangerine
+val CatGroceriesColor = Color(0xFF1E8CF5)   // Electric Cobalt
+val CatTransportColor = Color(0xFF22B866)   // Emerald Mint
+val CatConvenienceColor = Color(0xFF7B61FF) // Playful Iris
+val CatGadgetsColor = Color(0xFFD946EF)     // Vibrant Orchid
+val CatUtilitiesColor = Color(0xFFF59E0B)   // Sunny Amber
+val CatShoppingColor = Color(0xFFF43F5E)    // Crisp Berry
+val CatOtherColor = Color(0xFF64748B)       // Cool Slate Blue

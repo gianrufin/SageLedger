@@ -6,6 +6,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +18,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -46,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -57,6 +64,7 @@ import com.example.data.model.SpendingCategory
 import com.example.data.model.ThemeModePreference
 import com.example.notifications.SpendingAlertNotifier
 import com.example.notifications.TransactionNotificationListenerService
+import com.example.ui.components.CrispCard
 import com.example.ui.viewmodel.DashboardSnapshot
 import com.example.ui.viewmodel.UiState
 import com.google.firebase.Firebase
@@ -210,16 +218,55 @@ fun SettingsScreen(
     }
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.TopCenter
     ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 760.dp),
+                .widthIn(max = 760.dp)
+                .statusBarsPadding(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item(key = "settings_header") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Settings",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = currentUser?.email ?: currentUser?.displayName ?: "Preferences & sync",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(42.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            val initial = (currentUser?.displayName ?: currentUser?.email ?: "S")
+                                .firstOrNull()?.uppercaseChar()?.toString() ?: "S"
+                            Text(
+                                text = initial,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
             item(key = "appearance_card") {
                 SectionCard(title = "Appearance") {
                     Row(
@@ -227,17 +274,37 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "Dark mode",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Soothing low-glare slate surface",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Palette,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                            Column {
+                                Text(
+                                    text = "Dark mode",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Crisp obsidian low-glare canvas",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                         Switch(
                             checked = themeMode == ThemeModePreference.DARK,
@@ -300,8 +367,10 @@ fun SettingsScreen(
                             val bud = ((budgetInput.toDoubleOrNull() ?: 0.0) * 100.0).roundToLong().coerceAtLeast(0L)
                             onSaveFinanceSettings(inc, bud, selectedCurrency, githubRepoInput)
                         },
+                        shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .height(48.dp)
                             .testTag("save_finance_settings_button")
                     ) {
                         Text("Save budget preferences")
@@ -330,7 +399,7 @@ fun SettingsScreen(
                                 }
                             }
                             if (idx < SpendingCategory.entries.lastIndex) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                             }
                         }
                     }
@@ -491,7 +560,7 @@ fun SettingsScreen(
                         value = githubRepoInput,
                         onValueChange = { githubRepoInput = it.take(120) },
                         label = { Text("GitHub repository (owner/repo)") },
-                        placeholder = { Text("e.g. gianrufin/sageledger") },
+                        placeholder = { Text("e.g. gianrufin/SageLedger") },
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -530,7 +599,7 @@ fun SettingsScreen(
             }
 
             item(key = "settings_bottom_spacer") {
-                Spacer(modifier = Modifier.height(76.dp))
+                Spacer(modifier = Modifier.height(104.dp))
             }
         }
     }
@@ -541,10 +610,8 @@ private fun SectionCard(
     title: String,
     content: @Composable () -> Unit
 ) {
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+    CrispCard(
+        shape = RoundedCornerShape(22.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(

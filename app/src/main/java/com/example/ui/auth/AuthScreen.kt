@@ -27,9 +27,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.NotificationsActive
-import androidx.compose.material.icons.rounded.ShowChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -61,6 +62,8 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.example.R
+import com.example.ui.components.CrispCard
+import com.example.ui.theme.LocalLedgerExtraColors
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -86,6 +89,7 @@ fun AuthScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val credentialManager = remember(context) { CredentialManager.create(context) }
+    val extraColors = LocalLedgerExtraColors.current
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var visible by remember { mutableStateOf(false) }
@@ -105,14 +109,7 @@ fun AuthScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceContainerLow
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.safeDrawing),
         contentAlignment = Alignment.Center
     ) {
@@ -128,41 +125,59 @@ fun AuthScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = 480.dp)
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    .padding(horizontal = 24.dp, vertical = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(18.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(60.dp)
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Rounded.AccountBalanceWallet,
-                            contentDescription = "SageLedger emblem",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(30.dp)
-                        )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        extraColors.heroGradientTop,
+                                        extraColors.heroGradientMid,
+                                        extraColors.heroGradientBottom
+                                    )
+                                )
+                            )
+                            .padding(24.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = Color.White.copy(alpha = 0.22f),
+                                modifier = Modifier.size(56.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.AccountBalanceWallet,
+                                        contentDescription = "SageLedger emblem",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.displaySmall,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Playful, automatic spending clarity for Google Pay, cards, and everyday cash.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.88f)
+                            )
+                        }
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.displaySmall,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "Calm, automatic spending awareness for Google Pay, credit cards, and everyday cash.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Surface(
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 1.dp,
+                CrispCard(
+                    shape = RoundedCornerShape(22.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
@@ -171,13 +186,15 @@ fun AuthScreen(
                     ) {
                         FeatureRow(
                             icon = Icons.Rounded.NotificationsActive,
+                            iconTint = MaterialTheme.colorScheme.tertiary,
                             title = "Instant payment capture",
                             subtitle = "Detects Wallet, card, and SMS purchase alerts and confirms them automatically."
                         )
                         FeatureRow(
-                            icon = Icons.Rounded.ShowChart,
-                            title = "Clarity across periods",
-                            subtitle = "Track daily, weekly, monthly, and yearly habits with live savings projections."
+                            icon = Icons.AutoMirrored.Rounded.ShowChart,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = "Interactive visual clarity",
+                            subtitle = "Track daily, weekly, monthly, and yearly habits with donut breakdowns and savings pace."
                         )
                     }
                 }
@@ -221,26 +238,26 @@ fun AuthScreen(
                         )
                     },
                     enabled = !isLoading,
-                    shape = MaterialTheme.shapes.medium,
+                    shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = extraColors.contrastPillBg,
+                        contentColor = extraColors.contrastPillText
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(54.dp)
+                        .height(56.dp)
                         .testTag("sign_in_google_button")
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(22.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = extraColors.contrastPillText,
                             strokeWidth = 2.dp
                         )
                     } else {
                         Text(
                             text = stringResource(R.string.sign_in_with_google),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
                 }
@@ -252,6 +269,7 @@ fun AuthScreen(
 @Composable
 private fun FeatureRow(
     icon: ImageVector,
+    iconTint: Color,
     title: String,
     subtitle: String
 ) {
@@ -260,16 +278,16 @@ private fun FeatureRow(
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(40.dp)
+            shape = RoundedCornerShape(14.dp),
+            color = iconTint.copy(alpha = 0.14f),
+            modifier = Modifier.size(42.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(20.dp)
+                    tint = iconTint,
+                    modifier = Modifier.size(21.dp)
                 )
             }
         }

@@ -3,16 +3,19 @@ package com.example.ui.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CreditCard
@@ -22,7 +25,6 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.LocalConvenienceStore
 import androidx.compose.material.icons.rounded.LocalGroceryStore
 import androidx.compose.material.icons.rounded.Payments
-import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.ShoppingBag
 import androidx.compose.material.icons.rounded.Sms
@@ -38,18 +40,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.core.CurrencyFormatter
 import com.example.core.LedgerAnalytics
 import com.example.data.model.PaymentSource
 import com.example.data.model.SpendingCategory
 import com.example.data.model.SpendingTransaction
+import com.example.ui.theme.LocalLedgerExtraColors
 import com.example.ui.theme.TabularAmountStyle
 
 fun SpendingCategory.icon(): ImageVector = when (this) {
@@ -60,7 +71,7 @@ fun SpendingCategory.icon(): ImageVector = when (this) {
     SpendingCategory.GADGETS -> Icons.Rounded.Devices
     SpendingCategory.UTILITIES -> Icons.Rounded.Bolt
     SpendingCategory.SHOPPING -> Icons.Rounded.ShoppingBag
-    SpendingCategory.OTHER -> Icons.Rounded.ReceiptLong
+    SpendingCategory.OTHER -> Icons.AutoMirrored.Rounded.ReceiptLong
 }
 
 fun PaymentSource.icon(): ImageVector = when (this) {
@@ -94,6 +105,87 @@ fun Modifier.springPressScale(pressedScale: Float = 0.96f): Modifier = composed 
         }
 }
 
+/**
+ * Displays a currency amount with the signature mockup split-decimal styling:
+ * major digits in bold/primary ink, fractional `.cents` slightly lighter & softer.
+ */
+@Composable
+fun SplitCurrencyText(
+    amountCents: Long,
+    currencyCode: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle = TabularAmountStyle.copy(fontSize = 36.sp),
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    fractionAlpha: Float = 0.56f,
+    showPlusSign: Boolean = false,
+    prefix: String = ""
+) {
+    val formatted = remember(amountCents, currencyCode, showPlusSign, prefix) {
+        prefix + CurrencyFormatter.formatCents(amountCents, currencyCode, showPlusSign = showPlusSign)
+    }
+    val dotIdx = formatted.lastIndexOf('.')
+    val annotated = remember(formatted, color, fractionAlpha, style) {
+        buildAnnotatedString {
+            if (dotIdx in 1 until formatted.length - 1) {
+                withStyle(SpanStyle(color = color, fontWeight = FontWeight.Bold)) {
+                    append(formatted.substring(0, dotIdx))
+                }
+                withStyle(
+                    SpanStyle(
+                        color = color.copy(alpha = fractionAlpha),
+                        fontWeight = FontWeight.Medium
+                    )
+                ) {
+                    append(formatted.substring(dotIdx))
+                }
+            } else {
+                withStyle(SpanStyle(color = color, fontWeight = FontWeight.Bold)) {
+                    append(formatted)
+                }
+            }
+        }
+    }
+    Text(
+        text = annotated,
+        style = style,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun CrispCard(
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(22.dp),
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    borderColor: Color = LocalLedgerExtraColors.current.hairlineBorder,
+    borderWidth: Dp = 1.dp,
+    onClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            shape = shape,
+            color = containerColor,
+            border = BorderStroke(borderWidth, borderColor),
+            modifier = modifier
+        ) {
+            Column(content = content)
+        }
+    } else {
+        Surface(
+            shape = shape,
+            color = containerColor,
+            border = BorderStroke(borderWidth, borderColor),
+            modifier = modifier
+        ) {
+            Column(content = content)
+        }
+    }
+}
+
 @Composable
 fun TransactionRowCard(
     transaction: SpendingTransaction,
@@ -103,41 +195,46 @@ fun TransactionRowCard(
 ) {
     val category = transaction.categoryEnum
     val source = transaction.paymentSourceEnum
+    val extraColors = LocalLedgerExtraColors.current
 
-    Surface(
+    CrispCard(
         onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = if (transaction.needsReview) 2.dp else 0.dp,
+        shape = RoundedCornerShape(20.dp),
+        borderColor = if (transaction.needsReview) {
+            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.55f)
+        } else {
+            extraColors.hairlineBorder
+        },
         modifier = modifier
             .fillMaxWidth()
+            .springPressScale(0.985f)
             .testTag("transaction_row_${transaction.id}")
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(horizontal = 14.dp, vertical = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = category.chartColor.copy(alpha = 0.14f),
-                modifier = Modifier.size(44.dp)
+                modifier = Modifier.size(46.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = category.icon(),
                         contentDescription = category.displayName,
                         tint = category.chartColor,
-                        modifier = Modifier.size(21.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -153,14 +250,14 @@ fun TransactionRowCard(
                     )
                     if (transaction.needsReview) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(50),
                             color = MaterialTheme.colorScheme.tertiaryContainer
                         ) {
                             Text(
                                 text = "Confirm",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                             )
                         }
                     }
@@ -169,50 +266,57 @@ fun TransactionRowCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = category.shortLabel,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    Icon(
-                        imageVector = source.icon(),
-                        contentDescription = source.displayName,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(13.dp)
-                    )
-                    Text(
-                        text = source.shortLabel,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    Text(
-                        text = LedgerAnalytics.formatDateTime(transaction.occurredAtMillis),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = category.chartColor.copy(alpha = 0.11f)
+                    ) {
+                        Text(
+                            text = category.shortLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = category.chartColor,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(
+                            imageVector = source.icon(),
+                            contentDescription = source.displayName,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = source.shortLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
 
-            Text(
-                text = CurrencyFormatter.formatCents(transaction.amountCents, currencyCode),
-                style = TabularAmountStyle.copy(
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Text(
+                    text = "-${CurrencyFormatter.formatCents(transaction.amountCents, currencyCode)}",
+                    style = TabularAmountStyle.copy(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = extraColors.expenseCoral
+                    )
                 )
-            )
+                Text(
+                    text = LedgerAnalytics.formatDateTime(transaction.occurredAtMillis),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
         }
     }
 }

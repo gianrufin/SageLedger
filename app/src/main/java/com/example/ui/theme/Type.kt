@@ -28,47 +28,61 @@ val JetBrainsMonoFamily = FontFamily(
 )
 
 val TabularAmountStyle = TextStyle(
+    fontFamily = PlusJakartaSansFamily,
+    fontWeight = FontWeight.Bold,
+    fontFeatureSettings = "tnum"
+)
+
+val MonoCodeStyle = TextStyle(
     fontFamily = JetBrainsMonoFamily,
     fontWeight = FontWeight.Medium,
     fontFeatureSettings = "tnum"
 )
 
 val SageTypography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = PlusJakartaSansFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 40.sp,
+        lineHeight = 46.sp,
+        letterSpacing = (-1.0).sp
+    ),
     displaySmall = TextStyle(
         fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
         lineHeight = 38.sp,
-        letterSpacing = (-0.5).sp
+        letterSpacing = (-0.6).sp
     ),
     headlineMedium = TextStyle(
         fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
         lineHeight = 30.sp,
-        letterSpacing = (-0.3).sp
+        letterSpacing = (-0.4).sp
     ),
     headlineSmall = TextStyle(
         fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
         lineHeight = 26.sp,
-        letterSpacing = (-0.2).sp
+        letterSpacing = (-0.3).sp
     ),
     titleLarge = TextStyle(
         fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 18.sp,
-        lineHeight = 24.sp
+        lineHeight = 24.sp,
+        letterSpacing = (-0.2).sp
     ),
     titleMedium = TextStyle(
         fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
         lineHeight = 21.sp
     ),
     titleSmall = TextStyle(
-        fontFamily = InterFamily,
+        fontFamily = PlusJakartaSansFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
         lineHeight = 18.sp
@@ -92,20 +106,20 @@ val SageTypography = Typography(
         lineHeight = 16.sp
     ),
     labelLarge = TextStyle(
-        fontFamily = InterFamily,
-        fontWeight = FontWeight.Medium,
+        fontFamily = PlusJakartaSansFamily,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
         lineHeight = 18.sp
     ),
     labelMedium = TextStyle(
         fontFamily = InterFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 11.sp,
         lineHeight = 15.sp
     ),
     labelSmall = TextStyle(
         fontFamily = InterFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 10.sp,
         lineHeight = 14.sp
     )

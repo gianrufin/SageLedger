@@ -311,7 +311,6 @@ class LedgerViewModel(
                     needsReview = false
                 ).map { txId ->
                     _lastAddedTransactionId.value = txId
-                    Unit
                 }
             } else {
                 repository.updateTransaction(
