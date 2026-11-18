@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0.11",
-  "versionCode": 17,
+  "versionName": "1.0.18",
+  "versionCode": 27,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "Playful visual redesign with interactive donut breakdown, hatched savings pace bar, category budget rings, and floating action dock."
+  "notes": "Automated GitHub build v1.0.18 (commit 6beca59)."
 }
