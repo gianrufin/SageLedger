@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidCategory(cat) {
+      return cat in ['FOOD', 'GROCERIES', 'TRANSPORT_FUEL', 'CONVENIENCE', 'GADGETS', 'UTILITIES', 'SHOPPING', 'OTHER'];
+    }
+
+    function isValidPaymentSource(src) {
+      return src in ['GOOGLE_PAY', 'CREDIT_CARD', 'SMS_ALERT', 'CASH', 'MANUAL'];
+    }
+
+    function isValidCurrency(curr) {
+      return curr in ['USD', 'PHP', 'EUR', 'GBP', 'JPY', 'SGD', 'AUD', 'CAD'];
+    }
+
+    function isValidTransaction(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.merchant is string && data.merchant.size() >= 1 && data.merchant.size() <= 120 &&
+             data.amountCents is int && data.amountCents > 0 && data.amountCents <= 1000000000 &&
+             data.category is string && isValidCategory(data.category) &&
+             data.paymentSource is string && isValidPaymentSource(data.paymentSource) &&
+             data.note is string && data.note.size() <= 300 &&
+             (!('rawSnippet' in data) || (data.rawSnippet is string && data.rawSnippet.size() <= 500)) &&
+             data.occurredAtMillis is int && data.occurredAtMillis > 0 &&
+             data.needsReview is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCategoryBudget(data, userId, categoryId) {
+      return data.userId is string && data.userId == userId &&
+             data.category is string && isValidCategory(data.category) && data.category == categoryId &&
+             data.monthlyLimitCents is int && data.monthlyLimitCents >= 0 && data.monthlyLimitCents <= 1000000000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidRecurringPreset(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.label is string && data.label.size() >= 1 && data.label.size() <= 40 &&
+             data.merchant is string && data.merchant.size() >= 1 && data.merchant.size() <= 120 &&
+             data.amountCents is int && data.amountCents > 0 && data.amountCents <= 1000000000 &&
+             data.category is string && isValidCategory(data.category) &&
+             data.paymentSource is string && isValidPaymentSource(data.paymentSource) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMerchantRule(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.merchantKeyword is string && data.merchantKeyword.size() >= 1 && data.merchantKeyword.size() <= 100 &&
+             data.category is string && isValidCategory(data.category) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidUserSettings(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.monthlyIncomeCents is int && data.monthlyIncomeCents >= 0 && data.monthlyIncomeCents <= 10000000000 &&
+             data.monthlyBudgetCents is int && data.monthlyBudgetCents >= 0 && data.monthlyBudgetCents <= 10000000000 &&
+             data.currencyCode is string && isValidCurrency(data.currencyCode) &&
+             data.githubRepo is string && data.githubRepo.size() <= 120 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId}/transactions/{transactionId} {
+      allow get: if isOwner(userId) && isValidId(transactionId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(transactionId) &&
+                       incoming().keys().hasAll(['userId', 'merchant', 'amountCents', 'category', 'paymentSource', 'note', 'occurredAtMillis', 'needsReview', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'merchant', 'amountCents', 'category', 'paymentSource', 'note', 'rawSnippet', 'occurredAtMillis', 'needsReview', 'createdAt', 'updatedAt']) &&
+                       isValidTransaction(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(transactionId) &&
+                       isValidTransaction(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['merchant', 'amountCents', 'category', 'paymentSource', 'note', 'rawSnippet', 'occurredAtMillis', 'needsReview', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(transactionId);
+    }
+
+    match /users/{userId}/budgets/{categoryId} {
+      allow get: if isOwner(userId) && isValidId(categoryId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(categoryId) &&
+                       incoming().keys().hasAll(['userId', 'category', 'monthlyLimitCents', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'category', 'monthlyLimitCents', 'createdAt', 'updatedAt']) &&
+                       isValidCategoryBudget(incoming(), userId, categoryId);
+      allow update: if isOwner(userId) &&
+                       isValidId(categoryId) &&
+                       isValidCategoryBudget(incoming(), userId, categoryId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().category == existing().category &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['monthlyLimitCents', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(categoryId);
+    }
+
+    match /users/{userId}/recurringPresets/{presetId} {
+      allow get: if isOwner(userId) && isValidId(presetId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(presetId) &&
+                       incoming().keys().hasAll(['userId', 'label', 'merchant', 'amountCents', 'category', 'paymentSource', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'label', 'merchant', 'amountCents', 'category', 'paymentSource', 'createdAt', 'updatedAt']) &&
+                       isValidRecurringPreset(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(presetId) &&
+                       isValidRecurringPreset(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['label', 'merchant', 'amountCents', 'category', 'paymentSource', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(presetId);
+    }
+
+    match /users/{userId}/merchantRules/{ruleId} {
+      allow get: if isOwner(userId) && isValidId(ruleId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(ruleId) &&
+                       incoming().keys().hasAll(['userId', 'merchantKeyword', 'category', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'merchantKeyword', 'category', 'createdAt', 'updatedAt']) &&
+                       isValidMerchantRule(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(ruleId) &&
+                       isValidMerchantRule(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['merchantKeyword', 'category', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(ruleId);
+    }
+
+    match /users/{userId}/settings/{settingId} {
+      allow get: if isOwner(userId) && settingId == 'preferences';
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       settingId == 'preferences' &&
+                       incoming().keys().hasAll(['userId', 'monthlyIncomeCents', 'monthlyBudgetCents', 'currencyCode', 'githubRepo', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'monthlyIncomeCents', 'monthlyBudgetCents', 'currencyCode', 'githubRepo', 'createdAt', 'updatedAt']) &&
+                       isValidUserSettings(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       settingId == 'preferences' &&
+                       isValidUserSettings(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['monthlyIncomeCents', 'monthlyBudgetCents', 'currencyCode', 'githubRepo', 'updatedAt']);
+      allow delete: if isOwner(userId) && settingId == 'preferences';
+    }
+  }
+}

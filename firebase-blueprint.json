@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A user spending record captured from Wallet, card, SMS notification, quick-add preset, or manual entry.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "merchant": { "type": "string", "description": "Store or merchant display name (1-120 chars)." },
+        "amountCents": { "type": "integer", "description": "Transaction amount in minor currency units (cents)." },
+        "category": {
+          "type": "string",
+          "enum": ["FOOD", "GROCERIES", "TRANSPORT_FUEL", "CONVENIENCE", "GADGETS", "UTILITIES", "SHOPPING", "OTHER"]
+        },
+        "paymentSource": {
+          "type": "string",
+          "enum": ["GOOGLE_PAY", "CREDIT_CARD", "SMS_ALERT", "CASH", "MANUAL"]
+        },
+        "note": { "type": "string", "description": "Optional user reconciliation note (0-300 chars)." },
+        "rawSnippet": { "type": "string", "description": "Optional captured notification text snippet (0-500 chars)." },
+        "occurredAtMillis": { "type": "integer", "description": "Epoch milliseconds when the purchase occurred." },
+        "needsReview": { "type": "boolean", "description": "True if auto-captured and awaiting user confirmation." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": ["userId", "merchant", "amountCents", "category", "paymentSource", "note", "occurredAtMillis", "needsReview", "createdAt", "updatedAt"]
+    },
+    "CategoryBudget": {
+      "title": "CategoryBudget",
+      "description": "Monthly spending cap configured per spending category.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": ["FOOD", "GROCERIES", "TRANSPORT_FUEL", "CONVENIENCE", "GADGETS", "UTILITIES", "SHOPPING", "OTHER"]
+        },
+        "monthlyLimitCents": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "category", "monthlyLimitCents", "createdAt", "updatedAt"]
+    },
+    "RecurringPreset": {
+      "title": "RecurringPreset",
+      "description": "One-tap quick-add recurring expense shortcut.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "label": { "type": "string" },
+        "merchant": { "type": "string" },
+        "amountCents": { "type": "integer" },
+        "category": {
+          "type": "string",
+          "enum": ["FOOD", "GROCERIES", "TRANSPORT_FUEL", "CONVENIENCE", "GADGETS", "UTILITIES", "SHOPPING", "OTHER"]
+        },
+        "paymentSource": {
+          "type": "string",
+          "enum": ["GOOGLE_PAY", "CREDIT_CARD", "SMS_ALERT", "CASH", "MANUAL"]
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "label", "merchant", "amountCents", "category", "paymentSource", "createdAt", "updatedAt"]
+    },
+    "MerchantRule": {
+      "title": "MerchantRule",
+      "description": "User-learned keyword-to-category override for automatic store classification.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "merchantKeyword": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": ["FOOD", "GROCERIES", "TRANSPORT_FUEL", "CONVENIENCE", "GADGETS", "UTILITIES", "SHOPPING", "OTHER"]
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "merchantKeyword", "category", "createdAt", "updatedAt"]
+    },
+    "UserFinanceSettings": {
+      "title": "UserFinanceSettings",
+      "description": "User income target, overall monthly budget, currency, and GitHub update repository.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "monthlyIncomeCents": { "type": "integer" },
+        "monthlyBudgetCents": { "type": "integer" },
+        "currencyCode": { "type": "string", "enum": ["USD", "PHP", "EUR", "GBP", "JPY", "SGD", "AUD", "CAD"] },
+        "githubRepo": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "monthlyIncomeCents", "monthlyBudgetCents", "currencyCode", "githubRepo", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "User-isolated spending transaction records."
+    },
+    "/users/{userId}/budgets/{categoryId}": {
+      "schema": { "$ref": "#/entities/CategoryBudget" },
+      "description": "Monthly budget targets per spending category."
+    },
+    "/users/{userId}/recurringPresets/{presetId}": {
+      "schema": { "$ref": "#/entities/RecurringPreset" },
+      "description": "Quick-add shortcuts for recurring expenses."
+    },
+    "/users/{userId}/merchantRules/{ruleId}": {
+      "schema": { "$ref": "#/entities/MerchantRule" },
+      "description": "Custom merchant keyword categorization rules."
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/UserFinanceSettings" },
+      "description": "User financial preferences and GitHub release repo configuration."
+    }
+  }
+}

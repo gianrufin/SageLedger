@@ -1,0 +1,6 @@
+{
+  "name": "SageLedger",
+  "description": "Minimalist spending tracker that captures Google Wallet, card, and SMS purchase alerts, categorizes stores, and projects monthly savings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
