@@ -363,6 +363,27 @@ class LedgerViewModel(
         }
     }
 
+    fun confirmTransaction(transaction: SpendingTransaction) {
+        if (!transaction.needsReview || transaction.id.isBlank()) return
+        viewModelScope.launch {
+            repository.updateTransaction(
+                userId = currentUserId,
+                transactionId = transaction.id,
+                merchant = transaction.merchant,
+                amountCents = transaction.amountCents,
+                category = transaction.categoryEnum,
+                paymentSource = transaction.paymentSourceEnum,
+                note = transaction.note,
+                occurredAtMillis = transaction.occurredAtMillis,
+                needsReview = false
+            ).onSuccess {
+                _statusMessage.value = "Confirmed ${transaction.merchant}"
+            }.onFailure { err ->
+                _statusMessage.value = err.localizedMessage ?: "Failed to confirm purchase."
+            }
+        }
+    }
+
     fun deleteTransaction(transactionId: String) {
         viewModelScope.launch {
             repository.deleteTransaction(currentUserId, transactionId)

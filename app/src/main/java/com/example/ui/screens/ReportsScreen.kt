@@ -510,6 +510,9 @@ fun ReportsScreen(
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
                                             report.paymentSources.forEach { srcItem ->
+                                                val isEWallet = srcItem.source == com.example.data.model.PaymentSource.E_WALLET
+                                                val badgeBg = if (isEWallet) extraColors.cobaltContainer else MaterialTheme.colorScheme.primaryContainer
+                                                val badgeTint = if (isEWallet) extraColors.eWalletTint else MaterialTheme.colorScheme.primary
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     verticalAlignment = Alignment.CenterVertically,
@@ -521,14 +524,14 @@ fun ReportsScreen(
                                                     ) {
                                                         Surface(
                                                             shape = RoundedCornerShape(12.dp),
-                                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                                            color = badgeBg,
                                                             modifier = Modifier.size(38.dp)
                                                         ) {
                                                             Box(contentAlignment = Alignment.Center) {
                                                                 Icon(
                                                                     imageVector = srcItem.source.icon(),
                                                                     contentDescription = srcItem.source.displayName,
-                                                                    tint = MaterialTheme.colorScheme.primary,
+                                                                    tint = badgeTint,
                                                                     modifier = Modifier.size(18.dp)
                                                                 )
                                                             }
@@ -536,7 +539,7 @@ fun ReportsScreen(
                                                         Column {
                                                             Text(
                                                                 text = srcItem.source.displayName,
-                                                                style = MaterialTheme.typography.titleSmall,
+                                                                style = MaterialTheme.typography.titleMedium,
                                                                 color = MaterialTheme.colorScheme.onSurface
                                                             )
                                                             Text(
@@ -549,7 +552,7 @@ fun ReportsScreen(
                                                     SplitCurrencyText(
                                                         amountCents = srcItem.totalCents,
                                                         currencyCode = currencyCode,
-                                                        style = TabularAmountStyle.copy(fontSize = 15.sp),
+                                                        style = TabularAmountStyle.copy(fontSize = 16.sp),
                                                         color = MaterialTheme.colorScheme.onSurface
                                                     )
                                                 }
@@ -708,7 +711,7 @@ private fun CategoryBreakdownCard(
                     SplitCurrencyText(
                         amountCents = item.spentCents,
                         currencyCode = currencyCode,
-                        style = TabularAmountStyle.copy(fontSize = 15.sp),
+                        style = TabularAmountStyle.copy(fontSize = 16.sp),
                         color = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.onSurface
                     )
                     if (showBudgetRatio && item.budgetCents > 0L) {

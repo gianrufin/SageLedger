@@ -4,12 +4,14 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.DirectionsCar
@@ -25,13 +28,18 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.LocalConvenienceStore
 import androidx.compose.material.icons.rounded.LocalGroceryStore
 import androidx.compose.material.icons.rounded.Payments
+import androidx.compose.material.icons.rounded.QrCode2
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.ShoppingBag
 import androidx.compose.material.icons.rounded.Sms
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -76,6 +85,7 @@ fun SpendingCategory.icon(): ImageVector = when (this) {
 
 fun PaymentSource.icon(): ImageVector = when (this) {
     PaymentSource.GOOGLE_PAY -> Icons.Rounded.AccountBalanceWallet
+    PaymentSource.E_WALLET -> Icons.Rounded.QrCode2
     PaymentSource.CREDIT_CARD -> Icons.Rounded.CreditCard
     PaymentSource.SMS_ALERT -> Icons.Rounded.Sms
     PaymentSource.CASH -> Icons.Rounded.Payments
@@ -106,17 +116,17 @@ fun Modifier.springPressScale(pressedScale: Float = 0.96f): Modifier = composed 
 }
 
 /**
- * Displays a currency amount with the signature mockup split-decimal styling:
- * major digits in bold/primary ink, fractional `.cents` slightly lighter & softer.
+ * Displays a currency amount with editorial Outfit split-decimal contrast:
+ * major digits ExtraBold in primary ink, fractional `.cents` softer Medium weight.
  */
 @Composable
 fun SplitCurrencyText(
     amountCents: Long,
     currencyCode: String,
     modifier: Modifier = Modifier,
-    style: TextStyle = TabularAmountStyle.copy(fontSize = 36.sp),
+    style: TextStyle = TabularAmountStyle.copy(fontSize = 40.sp),
     color: Color = MaterialTheme.colorScheme.onSurface,
-    fractionAlpha: Float = 0.56f,
+    fractionAlpha: Float = 0.45f,
     showPlusSign: Boolean = false,
     prefix: String = ""
 ) {
@@ -127,7 +137,7 @@ fun SplitCurrencyText(
     val annotated = remember(formatted, color, fractionAlpha, style) {
         buildAnnotatedString {
             if (dotIdx in 1 until formatted.length - 1) {
-                withStyle(SpanStyle(color = color, fontWeight = FontWeight.Bold)) {
+                withStyle(SpanStyle(color = color, fontWeight = FontWeight.ExtraBold)) {
                     append(formatted.substring(0, dotIdx))
                 }
                 withStyle(
@@ -139,7 +149,7 @@ fun SplitCurrencyText(
                     append(formatted.substring(dotIdx))
                 }
             } else {
-                withStyle(SpanStyle(color = color, fontWeight = FontWeight.Bold)) {
+                withStyle(SpanStyle(color = color, fontWeight = FontWeight.ExtraBold)) {
                     append(formatted)
                 }
             }
@@ -186,6 +196,79 @@ fun CrispCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SwipeableTransactionRowCard(
+    transaction: SpendingTransaction,
+    currencyCode: String,
+    onClick: () -> Unit,
+    onSwipeConfirm: (SpendingTransaction) -> Unit,
+    modifier: Modifier = Modifier,
+    dismissOutOnConfirm: Boolean = false
+) {
+    if (!transaction.needsReview) {
+        TransactionRowCard(
+            transaction = transaction,
+            currencyCode = currencyCode,
+            onClick = onClick,
+            modifier = modifier
+        )
+        return
+    }
+
+    val extraColors = LocalLedgerExtraColors.current
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.StartToEnd) {
+                onSwipeConfirm(transaction)
+                dismissOutOnConfirm
+            } else {
+                false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = true,
+        enableDismissFromEndToStart = false,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(extraColors.positiveGreen)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = "Confirm alert",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Confirm purchase",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.White
+                    )
+                }
+            }
+        },
+        modifier = modifier
+    ) {
+        TransactionRowCard(
+            transaction = transaction,
+            currencyCode = currencyCode,
+            onClick = onClick
+        )
+    }
+}
+
 @Composable
 fun TransactionRowCard(
     transaction: SpendingTransaction,
@@ -201,7 +284,7 @@ fun TransactionRowCard(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         borderColor = if (transaction.needsReview) {
-            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.55f)
+            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.65f)
         } else {
             extraColors.hairlineBorder
         },
@@ -213,13 +296,13 @@ fun TransactionRowCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 13.dp),
+                .padding(horizontal = 14.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = category.chartColor.copy(alpha = 0.14f),
+                color = category.chartColor.copy(alpha = 0.13f),
                 modifier = Modifier.size(46.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -242,7 +325,7 @@ fun TransactionRowCard(
                 ) {
                     Text(
                         text = transaction.merchant,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -254,7 +337,7 @@ fun TransactionRowCard(
                             color = MaterialTheme.colorScheme.tertiaryContainer
                         ) {
                             Text(
-                                text = "Confirm",
+                                text = "Swipe →",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
@@ -284,8 +367,12 @@ fun TransactionRowCard(
                         Icon(
                             imageVector = source.icon(),
                             contentDescription = source.displayName,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(12.dp)
+                            tint = if (source == PaymentSource.E_WALLET) {
+                                extraColors.eWalletTint
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = source.shortLabel,
@@ -305,7 +392,7 @@ fun TransactionRowCard(
                 Text(
                     text = "-${CurrencyFormatter.formatCents(transaction.amountCents, currencyCode)}",
                     style = TabularAmountStyle.copy(
-                        fontSize = 15.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = extraColors.expenseCoral
                     )

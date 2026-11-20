@@ -16,8 +16,8 @@ android {
     applicationId = "com.aistudio.sageledger.kxmptr"
     minSdk = 24
     targetSdk = 36
-    versionCode = (project.findProperty("sageVersionCode") as? String)?.toIntOrNull() ?: 17
-    versionName = (project.findProperty("sageVersionName") as? String)?.takeIf { it.isNotBlank() } ?: "1.0.11"
+    versionCode = (project.findProperty("sageVersionCode") as? String)?.toIntOrNull() ?: 18
+    versionName = (project.findProperty("sageVersionName") as? String)?.takeIf { it.isNotBlank() } ?: "1.0.12"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

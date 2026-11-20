@@ -8,11 +8,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.R
 
-val PlusJakartaSansFamily = FontFamily(
-    Font(R.font.plus_jakarta_sans, FontWeight.Normal),
-    Font(R.font.plus_jakarta_sans, FontWeight.Medium),
-    Font(R.font.plus_jakarta_sans, FontWeight.SemiBold),
-    Font(R.font.plus_jakarta_sans, FontWeight.Bold)
+val OutfitFamily = FontFamily(
+    Font(R.font.outfit, FontWeight.Normal),
+    Font(R.font.outfit, FontWeight.Medium),
+    Font(R.font.outfit, FontWeight.SemiBold),
+    Font(R.font.outfit, FontWeight.Bold),
+    Font(R.font.outfit, FontWeight.ExtraBold)
 )
 
 val InterFamily = FontFamily(
@@ -28,8 +29,8 @@ val JetBrainsMonoFamily = FontFamily(
 )
 
 val TabularAmountStyle = TextStyle(
-    fontFamily = PlusJakartaSansFamily,
-    fontWeight = FontWeight.Bold,
+    fontFamily = OutfitFamily,
+    fontWeight = FontWeight.ExtraBold,
     fontFeatureSettings = "tnum"
 )
 
@@ -41,51 +42,52 @@ val MonoCodeStyle = TextStyle(
 
 val SageTypography = Typography(
     displayLarge = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
-        lineHeight = 46.sp,
-        letterSpacing = (-1.0).sp
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 48.sp,
+        lineHeight = 52.sp,
+        letterSpacing = (-1.4).sp
     ),
     displaySmall = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
-        lineHeight = 38.sp,
-        letterSpacing = (-0.6).sp
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 36.sp,
+        lineHeight = 42.sp,
+        letterSpacing = (-0.9).sp
     ),
     headlineMedium = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
+        fontFamily = OutfitFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 30.sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.7).sp
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = OutfitFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
         lineHeight = 30.sp,
         letterSpacing = (-0.4).sp
     ),
-    headlineSmall = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
+    titleLarge = TextStyle(
+        fontFamily = OutfitFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
         lineHeight = 26.sp,
         letterSpacing = (-0.3).sp
     ),
-    titleLarge = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
-        letterSpacing = (-0.2).sp
-    ),
     titleMedium = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
+        fontFamily = OutfitFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 15.sp,
-        lineHeight = 21.sp
+        fontSize = 16.sp,
+        lineHeight = 22.sp,
+        letterSpacing = (-0.15).sp
     ),
     titleSmall = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
+        fontFamily = OutfitFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 13.sp,
-        lineHeight = 18.sp
+        fontSize = 14.sp,
+        lineHeight = 19.sp
     ),
     bodyLarge = TextStyle(
         fontFamily = InterFamily,
@@ -96,7 +98,7 @@ val SageTypography = Typography(
     bodyMedium = TextStyle(
         fontFamily = InterFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
+        fontSize = 13.5.sp,
         lineHeight = 19.sp
     ),
     bodySmall = TextStyle(
@@ -106,7 +108,7 @@ val SageTypography = Typography(
         lineHeight = 16.sp
     ),
     labelLarge = TextStyle(
-        fontFamily = PlusJakartaSansFamily,
+        fontFamily = OutfitFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
         lineHeight = 18.sp

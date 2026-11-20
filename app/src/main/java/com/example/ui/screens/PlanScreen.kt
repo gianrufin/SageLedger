@@ -286,7 +286,7 @@ fun PlanScreen(
                                     SplitCurrencyText(
                                         amountCents = proj.spentToDateCents,
                                         currencyCode = currency,
-                                        style = TabularAmountStyle.copy(fontSize = 26.sp),
+                                        style = TabularAmountStyle.copy(fontSize = 30.sp),
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(

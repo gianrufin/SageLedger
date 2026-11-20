@@ -2,73 +2,68 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Playful Crisp Light Palette (Mockup-inspired)
-val StudioCanvasLight = Color(0xFFF6F7FA)
-val PureCardWhite = Color(0xFFFFFFFF)
-val SoftPillContainer = Color(0xFFEEF0F6)
-val SoftTrackHigh = Color(0xFFE4E7F0)
-val InkCharcoal = Color(0xFF14151A)
-val MutedSlateText = Color(0xFF6B7280)
-val HairlineBorderLight = Color(0xFFE9ECF2)
-val OutlineLight = Color(0xFFD0D5E0)
+// Crisp Editorial Light Palette (Apple/Google-inspired tonal restraint)
+val EditorialCanvasLight = Color(0xFFF5F5F7)
+val EditorialCardWhite = Color(0xFFFFFFFF)
+val EditorialWellLight = Color(0xFFECEEF2)
+val EditorialTrackLight = Color(0xFFE2E5EC)
+val EditorialInkPrimary = Color(0xFF111216)
+val EditorialInkSecondary = Color(0xFF636874)
+val EditorialBorderLight = Color(0xFFE5E7EE)
+val EditorialOutlineLight = Color(0xFFC8CDD8)
 
-val ElectricIrisPrimary = Color(0xFF6D5DF6)
-val IrisHeroTop = Color(0xFF7B61FF)
-val IrisHeroMid = Color(0xFF6A58F4)
-val IrisHeroBottom = Color(0xFF5384FF)
-val IrisPrimaryContainer = Color(0xFFEDE9FE)
-val OnIrisPrimaryContainer = Color(0xFF2B1E78)
+val EditorialSagePrimary = Color(0xFF0F7B55)
+val EditorialSageContainer = Color(0xFFD9F2E6)
+val OnEditorialSageContainer = Color(0xFF073B28)
 
-val VividMintSecondary = Color(0xFF1FB965)
-val MintSecondaryContainer = Color(0xFFDCF7E7)
-val OnMintSecondaryContainer = Color(0xFF0A4726)
+val EditorialCobaltSecondary = Color(0xFF0A66FF)
+val EditorialCobaltContainer = Color(0xFFE0ECFF)
+val OnEditorialCobaltContainer = Color(0xFF062C6E)
 
-val SunnyTangerineTertiary = Color(0xFFFF7A1A)
-val TangerineContainer = Color(0xFFFFECDD)
-val OnTangerineContainer = Color(0xFF5C2800)
+val EditorialAmberTertiary = Color(0xFFEA580C)
+val EditorialAmberContainer = Color(0xFFFFEDD5)
+val OnEditorialAmberContainer = Color(0xFF632102)
 
-val CrispCoralError = Color(0xFFEF4444)
-val CoralContainer = Color(0xFFFEE4E2)
-val OnCoralContainer = Color(0xFF69120F)
+val EditorialCoralError = Color(0xFFE11D48)
+val EditorialCoralContainer = Color(0xFFFFE4E9)
+val OnEditorialCoralContainer = Color(0xFF6D0B22)
 
-val ObsidianBannerSurface = Color(0xFF131418)
-val ObsidianBannerText = Color(0xFFFFFFFF)
+val EditorialPositiveGreen = Color(0xFF10B981)
+val EditorialObsidianPill = Color(0xFF141519)
+val EditorialObsidianText = Color(0xFFFFFFFF)
 
-// Crisp Obsidian Dark Palette
-val ObsidianCanvasDark = Color(0xFF0D1016)
-val SlateCardDark = Color(0xFF161B24)
-val SlateContainerDark = Color(0xFF1E2531)
-val SlateTrackDark = Color(0xFF283141)
-val CrispFrostInk = Color(0xFFF1F4FA)
-val MutedFrostText = Color(0xFF9BA5B8)
-val HairlineBorderDark = Color(0xFF262E3D)
-val OutlineDark = Color(0xFF394356)
+// Crisp Editorial Dark Palette (OLED-friendly Charcoal)
+val EditorialCanvasDark = Color(0xFF0B0C0F)
+val EditorialCardDark = Color(0xFF15171D)
+val EditorialWellDark = Color(0xFF1F232C)
+val EditorialTrackDark = Color(0xFF2A2F3B)
+val EditorialInkDark = Color(0xFFF5F6FA)
+val EditorialInkMutedDark = Color(0xFF9BA2B2)
+val EditorialBorderDark = Color(0xFF262A35)
+val EditorialOutlineDark = Color(0xFF3A4050)
 
-val LuminousIrisDark = Color(0xFF9285FF)
-val IrisDarkHeroTop = Color(0xFF3A2D8E)
-val IrisDarkHeroMid = Color(0xFF2B246D)
-val IrisDarkHeroBottom = Color(0xFF1F386E)
-val DarkIrisContainer = Color(0xFF2B255D)
-val OnDarkIrisContainer = Color(0xFFE6E1FF)
+val EditorialMintDark = Color(0xFF2DD496)
+val EditorialSageDarkContainer = Color(0xFF103C2B)
+val OnEditorialSageDarkContainer = Color(0xFFD0FAE7)
 
-val LuminousMintDark = Color(0xFF3DD683)
-val DarkMintContainer = Color(0xFF143D28)
-val OnDarkMintContainer = Color(0xFFCFF7DF)
+val EditorialCobaltDark = Color(0xFF5294FF)
+val EditorialCobaltDarkContainer = Color(0xFF132C58)
+val OnEditorialCobaltDarkContainer = Color(0xFFDBE9FF)
 
-val LuminousTangerineDark = Color(0xFFFF984D)
-val DarkTangerineContainer = Color(0xFF4B280D)
-val OnDarkTangerineContainer = Color(0xFFFFE4CE)
+val EditorialAmberDark = Color(0xFFFB923C)
+val EditorialAmberDarkContainer = Color(0xFF472008)
+val OnEditorialAmberDarkContainer = Color(0xFFFFE4CA)
 
-val LuminousCoralDark = Color(0xFFFF6E66)
-val DarkCoralContainer = Color(0xFF531B1A)
-val OnDarkCoralContainer = Color(0xFFFFDAD6)
+val EditorialCoralDark = Color(0xFFFB7185)
+val EditorialCoralDarkContainer = Color(0xFF4E1122)
+val OnEditorialCoralDarkContainer = Color(0xFFFFD9E0)
 
-// Lively Distinct Category Chart Colors
-val CatFoodColor = Color(0xFFFF7A1A)        // Vivid Tangerine
-val CatGroceriesColor = Color(0xFF1E8CF5)   // Electric Cobalt
-val CatTransportColor = Color(0xFF22B866)   // Emerald Mint
-val CatConvenienceColor = Color(0xFF7B61FF) // Playful Iris
-val CatGadgetsColor = Color(0xFFD946EF)     // Vibrant Orchid
-val CatUtilitiesColor = Color(0xFFF59E0B)   // Sunny Amber
-val CatShoppingColor = Color(0xFFF43F5E)    // Crisp Berry
-val CatOtherColor = Color(0xFF64748B)       // Cool Slate Blue
+// Vivid Editorial Category Accents
+val CatFoodColor = Color(0xFFF97316)        // Warm Tangerine
+val CatGroceriesColor = Color(0xFF0A66FF)   // Apple Cobalt
+val CatTransportColor = Color(0xFF10B981)   // Mint Emerald
+val CatConvenienceColor = Color(0xFF0F7B55) // Deep Sage
+val CatGadgetsColor = Color(0xFF6366F1)     // Electric Indigo
+val CatUtilitiesColor = Color(0xFFF59E0B)   // Golden Amber
+val CatShoppingColor = Color(0xFFEC4899)    // Editorial Rose
+val CatOtherColor = Color(0xFF64748B)       // Cool Slate

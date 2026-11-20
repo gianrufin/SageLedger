@@ -506,7 +506,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = if (listenerEnabled) "Active for Wallet, bank, and SMS alerts" else "Off — tap to enable in system settings",
+                                text = if (listenerEnabled) "Active for E-Wallet, GPay, bank, and SMS alerts" else "Off — tap to enable in system settings",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

@@ -198,6 +198,8 @@ private fun SageLedgerRoot(
             AuthenticatedLedgerShell(
                 currentUserId = user.uid,
                 userInitial = initial,
+                userName = user.displayName.orEmpty(),
+                userEmail = user.email.orEmpty(),
                 deepLinkTransactionId = deepLinkTransactionId,
                 onConsumeDeepLink = onConsumeDeepLink
             )
@@ -259,6 +261,8 @@ private data class NavDestinationItem(
 private fun AuthenticatedLedgerShell(
     currentUserId: String,
     userInitial: String,
+    userName: String,
+    userEmail: String,
     deepLinkTransactionId: String?,
     onConsumeDeepLink: () -> Unit
 ) {
@@ -449,9 +453,20 @@ private fun AuthenticatedLedgerShell(
                                     editingTransaction = tx
                                     showManualEntrySheet = true
                                 },
+                                onConfirmTransaction = { tx -> viewModel.confirmTransaction(tx) },
                                 onManualEntryClick = openNewExpense,
                                 onDismissUpdate = { perm -> viewModel.dismissUpdateNotice(perm) },
                                 userInitial = userInitial,
+                                userName = userName,
+                                userEmail = userEmail,
+                                themeMode = themeMode,
+                                onSetThemeMode = { viewModel.setThemeMode(it) },
+                                onSignOut = {
+                                    performSignOut(
+                                        credentialManager = credentialManager,
+                                        scope = scope
+                                    )
+                                },
                                 onNavigateToReports = { navigateToTab(ROUTE_REPORTS) },
                                 onNavigateToPlan = { navigateToTab(ROUTE_PLAN) },
                                 onNavigateToSettings = { navigateToTab(ROUTE_SETTINGS) }
@@ -683,6 +698,7 @@ private fun DockedNavTab(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium.copy(
+                fontFamily = com.example.ui.theme.OutfitFamily,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
             ),
             color = contentColor,

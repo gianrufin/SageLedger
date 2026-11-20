@@ -163,8 +163,8 @@ fun ManualEntrySheet(
                     OutlinedTextField(
                         value = smsPasteInput,
                         onValueChange = { smsPasteInput = it },
-                        label = { Text("Bank, Wallet, or SMS text") },
-                        placeholder = { Text("e.g. Paid \$14.80 at 7-Eleven using Google Pay") },
+                        label = { Text("Bank, E-Wallet, or SMS text") },
+                        placeholder = { Text("e.g. Paid \$14.80 via GCash at 7-Eleven") },
                         minLines = 2,
                         maxLines = 4,
                         modifier = Modifier

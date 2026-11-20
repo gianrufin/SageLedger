@@ -114,6 +114,36 @@ class LedgerLogicUnitTest {
     }
 
     @Test
+    fun parsesEWalletNotificationsAndSnippets() {
+        val gcashNotif = PurchaseNotificationParser.parseNotification(
+            packageName = "com.globe.gcash.android",
+            title = "GCash Payment",
+            body = "You have sent PHP 245.00 to Starbucks Reserve via QRPh."
+        )
+        assertNotNull(gcashNotif)
+        assertEquals(24500L, gcashNotif?.amountCents)
+        assertEquals(PaymentSource.E_WALLET, gcashNotif?.paymentSource)
+
+        val mayaText = PurchaseNotificationParser.parseRawText(
+            snippet = "Paid \$18.50 via Maya Wallet at 7-Eleven"
+        )
+        assertNotNull(mayaText)
+        assertEquals("7-Eleven", mayaText?.merchant)
+        assertEquals(1850L, mayaText?.amountCents)
+        assertEquals(PaymentSource.E_WALLET, mayaText?.paymentSource)
+
+        val paypalNotif = PurchaseNotificationParser.parseNotification(
+            packageName = "com.paypal.android.p2pmobile",
+            title = "PayPal",
+            body = "You paid \$32.40 at Steam"
+        )
+        assertNotNull(paypalNotif)
+        assertEquals("Steam", paypalNotif?.merchant)
+        assertEquals(3240L, paypalNotif?.amountCents)
+        assertEquals(PaymentSource.E_WALLET, paypalNotif?.paymentSource)
+    }
+
+    @Test
     fun savingsProjectionComputesExpectedMonthEndTrajectory() {
         val cal = Calendar.getInstance().apply {
             set(Calendar.YEAR, 2026)
@@ -138,8 +168,11 @@ class LedgerLogicUnitTest {
         )
         assertEquals(30, proj.daysInMonth)
         assertEquals(10, proj.currentDayOfMonth)
+        assertEquals(21, proj.remainingDaysInMonth)
         assertEquals(100_000L, proj.spentToDateCents)
         assertEquals(300_000L, proj.projectedMonthEndSpendCents)
         assertEquals(200_000L, proj.projectedSavingsCents)
+        assertEquals(200_000L / 21L, proj.dailyAllowanceCents)
+        assertEquals(9, proj.noSpendDaysThisMonth)
     }
 }

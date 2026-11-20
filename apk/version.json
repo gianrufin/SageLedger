@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0.18",
-  "versionCode": 27,
+  "versionName": "1.0.12",
+  "versionCode": 18,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "Automated GitHub build v1.0.18 (commit 6beca59)."
+  "notes": "Editorial tonal redesign with Outfit + Inter bold typography, E-Wallet payment channel support, distinct Account & Alerts sheets, Safe-to-Spend daily allowance, no-spend day streak, search & source filter pills, and swipe-right confirm."
 }

@@ -201,6 +201,11 @@ object LedgerAnalytics {
         val savingsBase = if (monthlyIncomeCents > 0L) monthlyIncomeCents else monthlyBudgetCents
         val projectedSavings = savingsBase - projectedEnd
 
+        val remainingDays = (daysInMonth - currentDay + 1).coerceAtLeast(1)
+        val remainingBudget = monthlyBudgetCents - spentToDate
+        val dailyAllowance = if (remainingBudget > 0L) remainingBudget / remainingDays else 0L
+        val noSpendDays = (0 until currentDay).count { dailySpend[it] == 0L }
+
         return SavingsProjection(
             daysInMonth = daysInMonth,
             currentDayOfMonth = currentDay,
@@ -210,7 +215,10 @@ object LedgerAnalytics {
             monthlyBudgetCents = monthlyBudgetCents,
             projectedSavingsCents = projectedSavings,
             actualCumulativeDailyCents = actualCumulative,
-            projectedDailyCents = projectedCurve
+            projectedDailyCents = projectedCurve,
+            remainingDaysInMonth = remainingDays,
+            dailyAllowanceCents = dailyAllowance,
+            noSpendDaysThisMonth = noSpendDays
         )
     }
 

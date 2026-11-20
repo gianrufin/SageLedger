@@ -44,9 +44,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -128,56 +129,64 @@ fun AuthScreen(
                     .padding(horizontal = 24.dp, vertical = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                Surface(
+                CrispCard(
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.Transparent,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        extraColors.heroGradientTop,
-                                        extraColors.heroGradientMid,
-                                        extraColors.heroGradientBottom
-                                    )
-                                )
-                            )
-                            .padding(24.dp)
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = Color.White.copy(alpha = 0.22f),
-                                modifier = Modifier.size(56.dp)
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(52.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Rounded.AccountBalanceWallet,
                                         contentDescription = "SageLedger emblem",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(28.dp)
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(26.dp)
                                     )
                                 }
                             }
-                            Text(
-                                text = stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.displaySmall,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Playful, automatic spending clarity for Google Pay, cards, and everyday cash.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White.copy(alpha = 0.88f)
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = extraColors.cobaltContainer,
+                                border = BorderStroke(1.dp, extraColors.hairlineBorder)
+                            ) {
+                                Text(
+                                    text = "Private Personal Ledger",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = extraColors.cobaltAccent,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
                         }
+
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.displayLarge.copy(fontSize = 42.sp, lineHeight = 46.sp),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Effortless spending clarity for E-Wallets, Google Pay, cards, SMS alerts, and daily cash.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
                 CrispCard(
-                    shape = RoundedCornerShape(22.dp),
+                    shape = RoundedCornerShape(24.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
@@ -186,15 +195,15 @@ fun AuthScreen(
                     ) {
                         FeatureRow(
                             icon = Icons.Rounded.NotificationsActive,
-                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            iconTint = MaterialTheme.colorScheme.primary,
                             title = "Instant payment capture",
-                            subtitle = "Detects Wallet, card, and SMS purchase alerts and confirms them automatically."
+                            subtitle = "Detects E-Wallet, Google Pay, card, and SMS purchase alerts with swipe-to-confirm review."
                         )
                         FeatureRow(
                             icon = Icons.AutoMirrored.Rounded.ShowChart,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            title = "Interactive visual clarity",
-                            subtitle = "Track daily, weekly, monthly, and yearly habits with donut breakdowns and savings pace."
+                            iconTint = extraColors.cobaltAccent,
+                            title = "Safe-to-Spend clarity",
+                            subtitle = "Live daily allowance, no-spend streak tracking, interactive reports, and savings trajectory."
                         )
                     }
                 }

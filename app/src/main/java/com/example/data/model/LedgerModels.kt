@@ -39,6 +39,7 @@ enum class SpendingCategory(
 
 enum class PaymentSource(val displayName: String, val shortLabel: String) {
     GOOGLE_PAY("Google Pay", "GPay"),
+    E_WALLET("E-Wallet", "E-Wallet"),
     CREDIT_CARD("Credit Card", "Card"),
     SMS_ALERT("SMS Alert", "SMS"),
     CASH("Cash", "Cash"),
@@ -180,7 +181,10 @@ data class SavingsProjection(
     val monthlyBudgetCents: Long,
     val projectedSavingsCents: Long,
     val actualCumulativeDailyCents: List<Long>,
-    val projectedDailyCents: List<Long>
+    val projectedDailyCents: List<Long>,
+    val remainingDaysInMonth: Int = (daysInMonth - currentDayOfMonth + 1).coerceAtLeast(1),
+    val dailyAllowanceCents: Long = 0L,
+    val noSpendDaysThisMonth: Int = 0
 )
 
 data class TrendBucket(

@@ -18,6 +18,22 @@ object PurchaseNotificationParser {
         "com.google.android.apps.nbu.paisa.user"
     )
 
+    private val eWalletPackages = setOf(
+        "com.globe.gcash.android",
+        "com.paymaya",
+        "com.grabtaxi.passenger",
+        "com.shopee.ph",
+        "com.paypal.android.p2pmobile",
+        "com.venmo",
+        "com.squareup.cash",
+        "ph.coins.wallet"
+    )
+
+    private val eWalletKeywords = listOf(
+        "gcash", "paymaya", "maya", "grabpay", "shopeepay", "paypal",
+        "venmo", "cash app", "coins.ph", "e-wallet", "ewallet", "qrph", "qr ph"
+    )
+
     private val smsPackages = setOf(
         "com.google.android.apps.messaging",
         "com.samsung.android.messaging",
@@ -35,7 +51,7 @@ object PurchaseNotificationParser {
         "spent", "paid", "purchase", "purchased", "charged", "charge", "payment",
         "debited", "debit", "transaction", "tap", "tapped", "google pay", "google wallet",
         "card ending", "credit card", "visa", "mastercard", "amex", "pos", "approved",
-        "used for", "used at", "authorized"
+        "used for", "used at", "authorized", "sent"
     )
 
     private val amountRegex = Regex(
@@ -66,18 +82,20 @@ object PurchaseNotificationParser {
         if (ignoreKeywords.any { lower.contains(it) }) return null
 
         val isWalletPkg = packageName in walletPackages
+        val isEWalletPkg = packageName in eWalletPackages
         val isSmsPkg = packageName in smsPackages
         val hasSpendSignal = spendSignalKeywords.any { lower.contains(it) }
-        if (!isWalletPkg && !hasSpendSignal) return null
+        if (!isWalletPkg && !isEWalletPkg && !hasSpendSignal) return null
 
         val amountCents = extractAmountCents(combined) ?: return null
         if (amountCents <= 0L) return null
 
-        val merchant = extractMerchant(title, body, isWalletPkg)
+        val merchant = extractMerchant(title, body, isWalletPkg || isEWalletPkg)
             ?.takeIf { it.isNotBlank() }
             ?: "Unknown Store"
 
         val source = when {
+            isEWalletPkg || eWalletKeywords.any { lower.contains(it) } -> PaymentSource.E_WALLET
             isWalletPkg || lower.contains("google pay") || lower.contains("google wallet") || lower.contains("gpay") ->
                 PaymentSource.GOOGLE_PAY
             lower.contains("credit card") || lower.contains("card ending") ||
@@ -104,8 +122,11 @@ object PurchaseNotificationParser {
         if (amountCents <= 0L) return null
         val merchant = extractMerchant("", trimmed, isWalletPkg = false) ?: "Store Purchase"
         val source = when {
-            lower.contains("google pay") || lower.contains("google wallet") -> PaymentSource.GOOGLE_PAY
-            lower.contains("card") || lower.contains("visa") || lower.contains("mastercard") -> PaymentSource.CREDIT_CARD
+            eWalletKeywords.any { lower.contains(it) } -> PaymentSource.E_WALLET
+            lower.contains("google pay") || lower.contains("google wallet") || lower.contains("gpay") ->
+                PaymentSource.GOOGLE_PAY
+            lower.contains("card") || lower.contains("visa") || lower.contains("mastercard") ->
+                PaymentSource.CREDIT_CARD
             else -> PaymentSource.SMS_ALERT
         }
         return ParsedPurchase(
