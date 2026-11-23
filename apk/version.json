@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0.21",
-  "versionCode": 29,
+  "versionName": "1.0.25",
+  "versionCode": 32,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "Sleek Dark Bento redesign with live spend sparkline hero, floating glass pill navigation dock, and Plus Jakarta Sans typography."
+  "notes": "Automated GitHub build v1.0.25 (commit e988358)."
 }
