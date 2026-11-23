@@ -902,7 +902,7 @@ private fun LiveSpendHeroBento(
     val pctUsed = ((spentCents.toDouble() / safeTarget.toDouble()) * 100.0).roundToInt()
     val heroAccent = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.primary
     val monthHeader = remember {
-        SimpleDateFormat("MMMM SPEND", Locale.getDefault()).format(Date()).uppercase(Locale.getDefault())
+        SimpleDateFormat("MMMM", Locale.getDefault()).format(Date()).uppercase(Locale.getDefault()) + " SPEND"
     }
 
     CrispCard(

@@ -227,7 +227,8 @@ fun LiveSpendSparklineChart(
             val h = size.height
             val padTop = 10.dp.toPx()
             val padBottom = 8.dp.toPx()
-            val plotH = (h - padTop - padBottom).coerceAtLeast(1f)
+            val plotH = h - padTop - padBottom
+            if (w <= 2f || plotH <= 2f) return@Canvas
             val stepX = w / (totalDays - 1).coerceAtLeast(1).toFloat()
 
             fun yFor(cents: Long): Float {
@@ -876,7 +877,8 @@ fun SavingsProjectionChart(
             val h = size.height
             val padTop = 10.dp.toPx()
             val padBottom = 10.dp.toPx()
-            val chartH = (h - padTop - padBottom).coerceAtLeast(1f)
+            val chartH = h - padTop - padBottom
+            if (w <= 2f || chartH <= 2f) return@Canvas
 
             val maxSpend = maxOf(
                 projection.projectedMonthEndSpendCents,

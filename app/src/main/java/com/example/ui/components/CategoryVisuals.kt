@@ -187,42 +187,36 @@ fun CrispCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val extraColors = LocalLedgerExtraColors.current
-    val resolvedBorder = if (extraColors.isDark && borderColor == extraColors.hairlineBorder) {
-        Brush.verticalGradient(
-            colors = listOf(
-                extraColors.bentoSheenBorder,
-                extraColors.hairlineBorder,
-                extraColors.hairlineBorder.copy(alpha = 0.4f)
-            )
-        )
+    val resolvedBorderColor = if (extraColors.isDark && borderColor == extraColors.hairlineBorder) {
+        Color(0x1EFFFFFF)
     } else {
-        null
+        borderColor
     }
 
     val glowModifier = if (accentGlowColor != null) {
         Modifier.drawBehind {
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        accentGlowColor.copy(alpha = if (extraColors.isDark) 0.16f else 0.08f),
-                        Color.Transparent
+            val glowRadius = size.maxDimension * 0.65f
+            if (glowRadius > 1f && size.width > 1f && size.height > 1f) {
+                val center = Offset(size.width * 0.92f, size.height * 0.12f)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            accentGlowColor.copy(alpha = if (extraColors.isDark) 0.16f else 0.08f),
+                            Color.Transparent
+                        ),
+                        center = center,
+                        radius = glowRadius
                     ),
-                    center = Offset(size.width * 0.92f, size.height * 0.12f),
-                    radius = size.maxDimension * 0.65f
-                ),
-                center = Offset(size.width * 0.92f, size.height * 0.12f),
-                radius = size.maxDimension * 0.65f
-            )
+                    center = center,
+                    radius = glowRadius
+                )
+            }
         }
     } else {
         Modifier
     }
 
-    val borderStroke = if (resolvedBorder != null) {
-        BorderStroke(borderWidth, resolvedBorder)
-    } else {
-        BorderStroke(borderWidth, borderColor)
-    }
+    val borderStroke = BorderStroke(borderWidth, resolvedBorderColor)
 
     if (onClick != null) {
         Surface(

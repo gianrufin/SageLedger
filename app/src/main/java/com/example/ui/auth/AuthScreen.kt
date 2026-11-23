@@ -119,30 +119,36 @@ fun AuthScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .drawBehind {
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            primaryGlow.copy(alpha = if (extraColors.isDark) 0.18f else 0.10f),
-                            Color.Transparent
+                val r1 = size.maxDimension * 0.6f
+                val r2 = size.maxDimension * 0.45f
+                if (r1 > 1f && size.width > 1f && size.height > 1f) {
+                    val c1 = Offset(size.width * 0.25f, size.height * 0.12f)
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryGlow.copy(alpha = if (extraColors.isDark) 0.18f else 0.10f),
+                                Color.Transparent
+                            ),
+                            center = c1,
+                            radius = r1
                         ),
-                        center = Offset(size.width * 0.25f, size.height * 0.12f),
-                        radius = size.maxDimension * 0.6f
-                    ),
-                    center = Offset(size.width * 0.25f, size.height * 0.12f),
-                    radius = size.maxDimension * 0.6f
-                )
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            secondaryGlow.copy(alpha = if (extraColors.isDark) 0.12f else 0.06f),
-                            Color.Transparent
+                        center = c1,
+                        radius = r1
+                    )
+                    val c2 = Offset(size.width * 0.85f, size.height * 0.42f)
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                secondaryGlow.copy(alpha = if (extraColors.isDark) 0.12f else 0.06f),
+                                Color.Transparent
+                            ),
+                            center = c2,
+                            radius = r2
                         ),
-                        center = Offset(size.width * 0.85f, size.height * 0.42f),
-                        radius = size.maxDimension * 0.45f
-                    ),
-                    center = Offset(size.width * 0.85f, size.height * 0.42f),
-                    radius = size.maxDimension * 0.45f
-                )
+                        center = c2,
+                        radius = r2
+                    )
+                }
             }
             .windowInsetsPadding(WindowInsets.safeDrawing),
         contentAlignment = Alignment.Center
