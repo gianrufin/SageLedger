@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0.25",
-  "versionCode": 32,
+  "versionName": "1.0.27",
+  "versionCode": 34,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "Automated GitHub build v1.0.25 (commit e988358)."
+  "notes": "Automated GitHub build v1.0.27 (commit 4de674d)."
 }
