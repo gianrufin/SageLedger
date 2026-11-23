@@ -159,10 +159,10 @@ fun ReportsScreen(
                 val periodTitle = (state as? UiState.Success)?.data?.periodLabel ?: selectedPeriod.label
                 CrispCard(
                     onClick = { showDateRangeDialog = true },
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(50)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 13.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -183,11 +183,11 @@ fun ReportsScreen(
                 }
             }
 
-            // Sleek architectural segment switcher ("Expenses" vs "Channels & Top")
+            // Bento segment switcher ("Expenses" vs "Channels & Top")
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, extraColors.hairlineBorder),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -195,16 +195,15 @@ fun ReportsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     ReportSectionTab.entries.forEach { tab ->
                         val isSelected = activeTab == tab
                         Surface(
                             onClick = { activeTab = tab },
-                            shape = RoundedCornerShape(9.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                            shadowElevation = if (isSelected) 1.dp else 0.dp,
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                             modifier = Modifier.weight(1f)
                         ) {
                             Box(
@@ -215,7 +214,7 @@ fun ReportsScreen(
                                     text = tab.label,
                                     style = MaterialTheme.typography.titleSmall,
                                     color = if (isSelected) {
-                                        MaterialTheme.colorScheme.onSurface
+                                        MaterialTheme.colorScheme.onPrimary
                                     } else {
                                         MaterialTheme.colorScheme.onSurfaceVariant
                                     }
@@ -226,13 +225,13 @@ fun ReportsScreen(
                 }
             }
 
-            // Period filter tabs (Day / Week / Month / Year / Period)
+            // Period filter pills (Day / Week / Month / Year / Period)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ReportPeriod.entries.forEach { period ->
                     val tag = "filter_${period.name.lowercase()}"
@@ -246,15 +245,15 @@ fun ReportsScreen(
                                 onSelectPeriod(period)
                             }
                         },
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                        border = if (selected) null else BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                        shape = RoundedCornerShape(50),
+                        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                        border = if (selected) null else BorderStroke(0.9.dp, extraColors.hairlineBorder),
                         modifier = Modifier
                             .defaultMinSize(minHeight = 36.dp)
                             .testTag(tag)
                     ) {
                         Box(
-                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -310,7 +309,8 @@ fun ReportsScreen(
                         if (activeTab == ReportSectionTab.EXPENSES) {
                             item(key = "expenses_chart_card") {
                                 CrispCard(
-                                    shape = RoundedCornerShape(18.dp),
+                                    shape = RoundedCornerShape(24.dp),
+                                    accentGlowColor = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(
@@ -465,10 +465,10 @@ fun ReportsScreen(
                             } else {
                                 item(key = "unified_categories_sheet") {
                                     CrispCard(
-                                        shape = RoundedCornerShape(18.dp),
+                                        shape = RoundedCornerShape(22.dp),
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(RoundedCornerShape(18.dp))
+                                            .clip(RoundedCornerShape(22.dp))
                                     ) {
                                         report.categoryBreakdown.forEachIndexed { idx, item ->
                                             val nonZeroIdx = nonZeroCategories.indexOfFirst { it.category == item.category }

@@ -383,7 +383,7 @@ fun ManualEntrySheet(
                         }
                     }
                 },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)

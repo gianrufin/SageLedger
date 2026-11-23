@@ -615,16 +615,16 @@ private fun SectionCard(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title.uppercase(java.util.Locale.getDefault()),
-            style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.7.sp),
+            style = MonoCodeStyle.copy(fontSize = 10.5.sp, letterSpacing = 0.85.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
         CrispCard(
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(22.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 content()

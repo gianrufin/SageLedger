@@ -53,6 +53,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -73,8 +76,8 @@ import com.example.core.LedgerAnalytics
 import com.example.data.model.PaymentSource
 import com.example.data.model.SpendingCategory
 import com.example.data.model.SpendingTransaction
+import com.example.ui.theme.BentoEyebrowStyle
 import com.example.ui.theme.LocalLedgerExtraColors
-import com.example.ui.theme.MonoCodeStyle
 import com.example.ui.theme.TabularAmountStyle
 
 fun SpendingCategory.icon(): ImageVector = when (this) {
@@ -121,7 +124,7 @@ fun Modifier.springPressScale(pressedScale: Float = 0.97f): Modifier = composed 
 }
 
 /**
- * Displays currency with editorial Outfit split-decimal contrast:
+ * Displays currency with tabular Plus Jakarta Sans contrast:
  * major digits ExtraBold in primary ink, fractional `.cents` softer Medium weight.
  */
 @Composable
@@ -131,7 +134,7 @@ fun SplitCurrencyText(
     modifier: Modifier = Modifier,
     style: TextStyle = TabularAmountStyle.copy(fontSize = 44.sp),
     color: Color = MaterialTheme.colorScheme.onSurface,
-    fractionAlpha: Float = 0.45f,
+    fractionAlpha: Float = 0.48f,
     showPlusSign: Boolean = false,
     prefix: String = ""
 ) {
@@ -169,41 +172,89 @@ fun SplitCurrencyText(
     )
 }
 
+/**
+ * Smoked-slate Dark Bento card container with translucent hairline edge and subtle sheen.
+ */
 @Composable
 fun CrispCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(18.dp),
+    shape: Shape = RoundedCornerShape(22.dp),
     containerColor: Color = MaterialTheme.colorScheme.surface,
     borderColor: Color = LocalLedgerExtraColors.current.hairlineBorder,
-    borderWidth: Dp = 0.9.dp,
+    borderWidth: Dp = 1.dp,
+    accentGlowColor: Color? = null,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val extraColors = LocalLedgerExtraColors.current
+    val resolvedBorder = if (extraColors.isDark && borderColor == extraColors.hairlineBorder) {
+        Brush.verticalGradient(
+            colors = listOf(
+                extraColors.bentoSheenBorder,
+                extraColors.hairlineBorder,
+                extraColors.hairlineBorder.copy(alpha = 0.4f)
+            )
+        )
+    } else {
+        null
+    }
+
+    val glowModifier = if (accentGlowColor != null) {
+        Modifier.drawBehind {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        accentGlowColor.copy(alpha = if (extraColors.isDark) 0.16f else 0.08f),
+                        Color.Transparent
+                    ),
+                    center = Offset(size.width * 0.92f, size.height * 0.12f),
+                    radius = size.maxDimension * 0.65f
+                ),
+                center = Offset(size.width * 0.92f, size.height * 0.12f),
+                radius = size.maxDimension * 0.65f
+            )
+        }
+    } else {
+        Modifier
+    }
+
+    val borderStroke = if (resolvedBorder != null) {
+        BorderStroke(borderWidth, resolvedBorder)
+    } else {
+        BorderStroke(borderWidth, borderColor)
+    }
+
     if (onClick != null) {
         Surface(
             onClick = onClick,
             shape = shape,
             color = containerColor,
-            border = BorderStroke(borderWidth, borderColor),
+            border = borderStroke,
             modifier = modifier
         ) {
-            Column(content = content)
+            Column(
+                modifier = glowModifier,
+                content = content
+            )
         }
     } else {
         Surface(
             shape = shape,
             color = containerColor,
-            border = BorderStroke(borderWidth, borderColor),
+            border = borderStroke,
             modifier = modifier
         ) {
-            Column(content = content)
+            Column(
+                modifier = glowModifier,
+                content = content
+            )
         }
     }
 }
 
 /**
- * Clean ledger transaction row designed to live inside a unified daily sheet
- * with hairline dividers rather than floating individual card boxes.
+ * Clean bento transaction row designed to live inside a unified daily bento card
+ * with subtle translucent dividers and swipe-right review confirmation.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -255,13 +306,13 @@ fun LedgerTransactionRow(
                             Icon(
                                 imageVector = Icons.Rounded.Check,
                                 contentDescription = "Confirm alert",
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
                                 text = "Confirm purchase",
                                 style = MaterialTheme.typography.titleSmall,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -279,9 +330,9 @@ fun LedgerTransactionRow(
 
         if (showBottomDivider) {
             HorizontalDivider(
-                thickness = 0.75.dp,
+                thickness = 0.8.dp,
                 color = extraColors.hairlineBorder,
-                modifier = Modifier.padding(start = 66.dp, end = 16.dp)
+                modifier = Modifier.padding(start = 70.dp, end = 16.dp)
             )
         }
     }
@@ -300,26 +351,29 @@ private fun LedgerRowContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 64.dp)
+            .defaultMinSize(minHeight = 68.dp)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .testTag("transaction_row_${transaction.id}"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Box(modifier = Modifier.size(40.dp)) {
+        Box(modifier = Modifier.size(42.dp)) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                shape = RoundedCornerShape(13.dp),
+                color = category.chartColor.copy(alpha = if (extraColors.isDark) 0.14f else 0.12f),
+                border = BorderStroke(
+                    0.8.dp,
+                    category.chartColor.copy(alpha = if (extraColors.isDark) 0.25f else 0.18f)
+                ),
                 modifier = Modifier.fillMaxSize()
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = category.icon(),
                         contentDescription = category.displayName,
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(19.dp)
+                        tint = category.chartColor,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -330,7 +384,7 @@ private fun LedgerRowContent(
                     border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.surface),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(10.dp)
+                        .size(11.dp)
                 ) {}
             }
         }
@@ -350,7 +404,7 @@ private fun LedgerRowContent(
                 append(category.shortLabel)
                 append(" · ")
                 append(source.shortLabel)
-                if (transaction.needsReview) append(" · Swipe to confirm")
+                if (transaction.needsReview) append(" · Swipe → confirm")
             }
             Text(
                 text = metaText,
@@ -382,7 +436,11 @@ private fun LedgerRowContent(
             )
             Text(
                 text = LedgerAnalytics.formatDateTime(transaction.occurredAtMillis),
-                style = MonoCodeStyle.copy(fontSize = 10.5.sp),
+                style = BentoEyebrowStyle.copy(
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.2.sp
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
@@ -401,10 +459,10 @@ fun SwipeableTransactionRowCard(
     dismissOutOnConfirm: Boolean = false
 ) {
     CrispCard(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(18.dp))
     ) {
         LedgerTransactionRow(
             transaction = transaction,

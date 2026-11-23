@@ -195,10 +195,10 @@ fun PlanScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Surface(
                                     onClick = onOpenSettings,
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(14.dp),
                                     color = MaterialTheme.colorScheme.surface,
-                                    border = BorderStroke(0.9.dp, extraColors.hairlineBorder),
-                                    modifier = Modifier.size(42.dp)
+                                    border = BorderStroke(1.dp, extraColors.hairlineBorder),
+                                    modifier = Modifier.size(44.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
@@ -211,10 +211,10 @@ fun PlanScreen(
                                 }
                                 Surface(
                                     onClick = onAddPresetClicked,
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(14.dp),
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier
-                                        .size(42.dp)
+                                        .size(44.dp)
                                         .springPressScale()
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -238,7 +238,8 @@ fun PlanScreen(
                         val barColor = if (isOnTrack) extraColors.positiveGreen else extraColors.expenseCoral
 
                         CrispCard(
-                            shape = RoundedCornerShape(18.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            accentGlowColor = barColor,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(
@@ -397,10 +398,10 @@ fun PlanScreen(
 
                     item(key = "unified_budgets_sheet") {
                         CrispCard(
-                            shape = RoundedCornerShape(18.dp),
+                            shape = RoundedCornerShape(22.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(18.dp))
+                                .clip(RoundedCornerShape(22.dp))
                         ) {
                             sortedCategories.forEachIndexed { idx, cat ->
                                 val limit = budgetMap[cat]?.monthlyLimitCents ?: cat.defaultBudgetCents
@@ -516,10 +517,10 @@ fun PlanScreen(
                     } else {
                         item(key = "unified_presets_sheet") {
                             CrispCard(
-                                shape = RoundedCornerShape(18.dp),
+                                shape = RoundedCornerShape(22.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(18.dp))
+                                    .clip(RoundedCornerShape(22.dp))
                             ) {
                                 data.recurringPresets.forEachIndexed { idx, preset ->
                                     Row(

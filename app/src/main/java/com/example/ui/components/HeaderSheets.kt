@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.example.core.CurrencyFormatter
 import com.example.data.model.SpendingTransaction
 import com.example.data.model.ThemeModePreference
+import com.example.ui.theme.BentoEyebrowStyle
 import com.example.ui.theme.LocalLedgerExtraColors
 import com.example.ui.theme.TabularAmountStyle
 
@@ -86,14 +87,15 @@ fun AccountProfileSheet(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
                     modifier = Modifier.size(56.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = userInitial,
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -117,10 +119,11 @@ fun AccountProfileSheet(
                 }
             }
 
-            // Budget Snapshot Strip
+            // Bento Budget Snapshot
             CrispCard(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(22.dp),
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                accentGlowColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -129,10 +132,10 @@ fun AccountProfileSheet(
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "Monthly Income",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = "MONTHLY INCOME",
+                            style = BentoEyebrowStyle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
@@ -141,10 +144,13 @@ fun AccountProfileSheet(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    Column(horizontalAlignment = Alignment.End) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
-                            text = "Monthly Limit",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = "MONTHLY LIMIT",
+                            style = BentoEyebrowStyle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
@@ -159,29 +165,28 @@ fun AccountProfileSheet(
             // Quick Theme Mode Selector
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Appearance",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = "APPEARANCE",
+                    style = BentoEyebrowStyle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainer,
-                    border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(0.9.dp, extraColors.hairlineBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         ThemeModePreference.entries.forEach { mode ->
                             val selected = themeMode == mode
                             Surface(
                                 onClick = { onSetThemeMode(mode) },
-                                shape = RoundedCornerShape(9.dp),
-                                color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                                shadowElevation = if (selected) 1.dp else 0.dp,
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Box(
@@ -192,7 +197,7 @@ fun AccountProfileSheet(
                                         text = mode.label,
                                         style = MaterialTheme.typography.labelLarge,
                                         color = if (selected) {
-                                            MaterialTheme.colorScheme.onSurface
+                                            MaterialTheme.colorScheme.onPrimary
                                         } else {
                                             MaterialTheme.colorScheme.onSurfaceVariant
                                         }
@@ -204,14 +209,14 @@ fun AccountProfileSheet(
                 }
             }
 
-            // Preferences shortcut + Sign Out
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CrispCard(
                     onClick = {
                         onDismiss()
                         onOpenSettings()
                     },
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -249,8 +254,8 @@ fun AccountProfileSheet(
                         onDismiss()
                         onSignOut()
                     },
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, extraColors.expenseCoral.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, extraColors.expenseCoral.copy(alpha = 0.45f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = extraColors.expenseCoral),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -330,7 +335,7 @@ fun AlertsInboxSheet(
                     color = if (listenerEnabled && postNotifGranted) {
                         extraColors.positiveGreenContainer
                     } else {
-                        MaterialTheme.colorScheme.tertiaryContainer
+                        extraColors.expenseCoralContainer
                     }
                 ) {
                     Text(
@@ -339,16 +344,16 @@ fun AlertsInboxSheet(
                         color = if (listenerEnabled && postNotifGranted) {
                             extraColors.onPositiveGreenContainer
                         } else {
-                            MaterialTheme.colorScheme.onTertiaryContainer
+                            extraColors.onExpenseCoralContainer
                         },
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
                 }
             }
 
-            // Capture Permission Health Card
+            // Capture Permission Health Bento Card
             CrispCard(
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(20.dp),
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -363,7 +368,7 @@ fun AlertsInboxSheet(
                         Icon(
                             imageVector = if (listenerEnabled) Icons.Rounded.NotificationsActive else Icons.Rounded.NotificationsOff,
                             contentDescription = null,
-                            tint = if (listenerEnabled) extraColors.positiveGreen else MaterialTheme.colorScheme.tertiary,
+                            tint = if (listenerEnabled) extraColors.positiveGreen else extraColors.expenseCoral,
                             modifier = Modifier.size(20.dp)
                         )
                         Column(modifier = Modifier.weight(1f)) {
@@ -397,7 +402,8 @@ fun AlertsInboxSheet(
 
             if (pendingAlerts.isEmpty()) {
                 CrispCard(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(22.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(

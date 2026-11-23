@@ -2,60 +2,61 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Mode: Warm Archival Vellum Paper & Deep Botanical Pine Ink
-val LedgerPaperLight = Color(0xFFF6F4EF)
-val LedgerSurfaceWhite = Color(0xFFFFFFFF)
-val LedgerStoneLight = Color(0xFFEDE9E0)
-val LedgerTrackLight = Color(0xFFE3DEC9)
-val LedgerInkPrimary = Color(0xFF141615)
-val LedgerInkSecondary = Color(0xFF61635E)
-val LedgerRuleLight = Color(0xFFE4E0D8)
-val LedgerOutlineLight = Color(0xFFC8C3B8)
+// Dark Bento (Primary Revolut / Copilot Inspired Palette)
+val BentoObsidianBg = Color(0xFF080A0F)
+val BentoSlateSurface = Color(0xFF12151E)
+val BentoSlateElevated = Color(0xFF1A1F2C)
+val BentoSlateTrack = Color(0xFF23293A)
+val BentoSlateHighest = Color(0xFF2D3549)
+val BentoInkPrimary = Color(0xFFF4F7FC)
+val BentoInkMuted = Color(0xFF8E97AD)
+val BentoHairlineDark = Color(0x14FFFFFF) // 8% translucent white
+val BentoSheenDark = Color(0x24FFFFFF)    // 14% top-edge glass highlight
+val BentoGlassDockDark = Color(0xEB151924)
 
-val LedgerPinePrimary = Color(0xFF0F4C3A)
-val LedgerPineContainer = Color(0xFFDDF0E8)
-val OnLedgerPineContainer = Color(0xFF0A3326)
+val BentoMintPrimary = Color(0xFF34D399)
+val BentoOnMintPrimary = Color(0xFF042217)
+val BentoMintContainer = Color(0xFF0D3326)
+val BentoOnMintContainer = Color(0xFFB8F7DF)
 
-val LedgerCobaltSecondary = Color(0xFF1D4ED8)
-val LedgerCobaltContainer = Color(0xFFE0E9FF)
-val OnLedgerCobaltContainer = Color(0xFF102A6E)
+val BentoSkySecondary = Color(0xFF38BDF8)
+val BentoOnSkySecondary = Color(0xFF052033)
+val BentoSkyContainer = Color(0xFF0E2B40)
+val BentoOnSkyContainer = Color(0xFFBAE6FD)
 
-val LedgerTerracotta = Color(0xFFC84B31)
-val LedgerTerracottaContainer = Color(0xFFFBE6E1)
-val OnLedgerTerracottaContainer = Color(0xFF6B1E0E)
+val BentoCoralTertiary = Color(0xFFFB7185)
+val BentoOnCoralTertiary = Color(0xFF3A0712)
+val BentoCoralContainer = Color(0xFF3D1420)
+val BentoOnCoralContainer = Color(0xFFFFD6DD)
 
-val LedgerEmeraldPositive = Color(0xFF157F58)
-val LedgerInkPillBg = Color(0xFF141615)
-val LedgerInkPillText = Color(0xFFF6F4EF)
+// Daylight Companion (Clean Crisp Porcelain Bento)
+val DaylightCanvasBg = Color(0xFFF3F5F9)
+val DaylightSurfaceWhite = Color(0xFFFFFFFF)
+val DaylightSlateWell = Color(0xFFEAEFF6)
+val DaylightTrackLight = Color(0xFFDCE3EE)
+val DaylightInkPrimary = Color(0xFF0F172A)
+val DaylightInkMuted = Color(0xFF64748B)
+val DaylightHairlineLight = Color(0xFFE2E8F0)
+val DaylightGlassDockLight = Color(0xEBFFFFFF)
 
-// Dark Mode: Matte Carbon Graphite & Sage Mint
-val LedgerPaperDark = Color(0xFF0E100F)
-val LedgerSurfaceDark = Color(0xFF171A18)
-val LedgerStoneDark = Color(0xFF202421)
-val LedgerTrackDark = Color(0xFF2C312D)
-val LedgerInkDark = Color(0xFFF4F2EC)
-val LedgerInkMutedDark = Color(0xFF9CA099)
-val LedgerRuleDark = Color(0xFF282D2A)
-val LedgerOutlineDark = Color(0xFF3E4540)
+val DaylightMintPrimary = Color(0xFF059669)
+val DaylightMintContainer = Color(0xFFD1FAE5)
+val DaylightOnMintContainer = Color(0xFF064E3B)
 
-val LedgerSageMintDark = Color(0xFF4ADE99)
-val LedgerPineDarkContainer = Color(0xFF133629)
-val OnLedgerPineDarkContainer = Color(0xFFD0FBE6)
+val DaylightSkySecondary = Color(0xFF0284C7)
+val DaylightSkyContainer = Color(0xFFE0F2FE)
+val DaylightOnSkyContainer = Color(0xFF0C4A6E)
 
-val LedgerCobaltDark = Color(0xFF7CA7FF)
-val LedgerCobaltDarkContainer = Color(0xFF162A54)
-val OnLedgerCobaltDarkContainer = Color(0xFFDCE8FF)
+val DaylightCoralTertiary = Color(0xFFE11D48)
+val DaylightCoralContainer = Color(0xFFFFE4E6)
+val DaylightOnCoralContainer = Color(0xFF881337)
 
-val LedgerTerracottaDark = Color(0xFFF27457)
-val LedgerTerracottaDarkContainer = Color(0xFF471C13)
-val OnLedgerTerracottaDarkContainer = Color(0xFFFFDBD2)
-
-// Editorial Category Palette (saturated yet restrained print inks)
-val CatFoodColor = Color(0xFFD95D39)        // Burnt Sienna
-val CatGroceriesColor = Color(0xFF1D4ED8)   // Blueprint Cobalt
-val CatTransportColor = Color(0xFF157F58)   // Botanical Sage
-val CatConvenienceColor = Color(0xFF0F4C3A) // Deep Pine
-val CatGadgetsColor = Color(0xFF4F46E5)     // Deep Indigo
-val CatUtilitiesColor = Color(0xFFB45309)   // Ochre Amber
-val CatShoppingColor = Color(0xFFBE185D)    // Muted Plum Rose
-val CatOtherColor = Color(0xFF57534E)       // Warm Stone Slate
+// Luminous Category Spectrum (tuned for crisp legibility on obsidian & porcelain)
+val CatFoodColor = Color(0xFFFB923C)        // Warm Tangerine
+val CatGroceriesColor = Color(0xFF38BDF8)   // Sky Cobalt
+val CatTransportColor = Color(0xFF34D399)   // Mint Emerald
+val CatConvenienceColor = Color(0xFF2DD4BF) // Electric Teal
+val CatGadgetsColor = Color(0xFF818CF8)     // Soft Indigo
+val CatUtilitiesColor = Color(0xFFFBBF24)   // Luminous Amber
+val CatShoppingColor = Color(0xFFF472B6)    // Rose Pink
+val CatOtherColor = Color(0xFF94A3B8)       // Cool Slate

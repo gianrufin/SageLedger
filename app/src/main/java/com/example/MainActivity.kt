@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -23,11 +24,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -64,6 +63,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -71,6 +73,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -100,6 +103,7 @@ import com.example.ui.screens.PlanScreen
 import com.example.ui.screens.ReportsScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.LocalLedgerExtraColors
+import com.example.ui.theme.PlusJakartaSansFamily
 import com.example.ui.theme.SageLedgerTheme
 import com.example.ui.viewmodel.LedgerViewModel
 import com.google.firebase.Firebase
@@ -140,7 +144,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val themeMode by preferencesStore.themeModeFlow.collectAsStateWithLifecycle(
-                initialValue = ThemeModePreference.SYSTEM
+                initialValue = ThemeModePreference.DARK
             )
             val isDark = when (themeMode) {
                 ThemeModePreference.SYSTEM -> isSystemInDarkTheme()
@@ -212,6 +216,7 @@ private fun FirebaseNotConfiguredScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(24.dp),
         contentAlignment = Alignment.Center
@@ -219,7 +224,7 @@ private fun FirebaseNotConfiguredScreen() {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 2.dp,
+            border = BorderStroke(1.dp, LocalLedgerExtraColors.current.hairlineBorder),
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 460.dp)
@@ -427,7 +432,7 @@ private fun AuthenticatedLedgerShell(
                 snackbarHost = {
                     SnackbarHost(
                         hostState = snackbarHostState,
-                        modifier = Modifier.padding(bottom = if (useNavRail) 12.dp else 84.dp)
+                        modifier = Modifier.padding(bottom = if (useNavRail) 12.dp else 96.dp)
                     )
                 },
                 contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -526,7 +531,7 @@ private fun AuthenticatedLedgerShell(
                     }
 
                     if (!useNavRail) {
-                        EditorialBottomNavigationDock(
+                        FloatingGlassBottomDock(
                             items = navItems,
                             currentRoute = currentRoute,
                             onSelectRoute = navigateToTab,
@@ -582,8 +587,12 @@ private fun AuthenticatedLedgerShell(
     }
 }
 
+/**
+ * Floating Glass Pill Bottom Bar + Corner `+` Button.
+ * Detached frosted dark-glass capsule paired with a dedicated corner emerald `+` action.
+ */
 @Composable
-private fun EditorialBottomNavigationDock(
+private fun FloatingGlassBottomDock(
     items: List<NavDestinationItem>,
     currentRoute: String,
     onSelectRoute: (String) -> Unit,
@@ -591,52 +600,48 @@ private fun EditorialBottomNavigationDock(
     modifier: Modifier = Modifier
 ) {
     val extraColors = LocalLedgerExtraColors.current
-
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.End
-    ) {
-        FloatingActionButton(
-            onClick = onAddClick,
-            shape = RoundedCornerShape(18.dp),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 4.dp,
-                pressedElevation = 8.dp
-            ),
-            modifier = Modifier
-                .padding(end = 16.dp, bottom = 14.dp)
-                .size(56.dp)
-                .springPressScale()
-                .testTag("fab_add_expense")
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Add,
-                contentDescription = "Record purchase or cash spend",
-                modifier = Modifier.size(26.dp)
+    val bgFadeBrush = remember(extraColors.isDark) {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.Transparent,
+                if (extraColors.isDark) Color(0xCC080A0F) else Color(0xCCF3F5F9)
             )
-        }
+        )
+    }
 
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth()
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(bgFadeBrush)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 560.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                androidx.compose.material3.HorizontalDivider(
-                    thickness = 0.8.dp,
-                    color = extraColors.hairlineBorder
-                )
+            Surface(
+                shape = RoundedCornerShape(30.dp),
+                color = extraColors.glassDockBg,
+                border = BorderStroke(1.dp, extraColors.glassDockBorder),
+                shadowElevation = 10.dp,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(62.dp)
+            ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                        .fillMaxSize()
+                        .padding(horizontal = 6.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceAround
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     items.forEach { item ->
-                        DockedNavTab(
+                        FloatingGlassNavTab(
                             item = item,
                             selected = currentRoute == item.route,
                             onClick = { onSelectRoute(item.route) },
@@ -645,12 +650,33 @@ private fun EditorialBottomNavigationDock(
                     }
                 }
             }
+
+            FloatingActionButton(
+                onClick = onAddClick,
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 12.dp
+                ),
+                modifier = Modifier
+                    .size(58.dp)
+                    .springPressScale()
+                    .testTag("fab_add_expense")
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Record purchase or cash spend",
+                    modifier = Modifier.size(26.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun DockedNavTab(
+private fun FloatingGlassNavTab(
     item: NavDestinationItem,
     selected: Boolean,
     onClick: () -> Unit,
@@ -662,35 +688,47 @@ private fun DockedNavTab(
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
+    val pillColor = if (selected) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+    } else {
+        Color.Transparent
+    }
 
-    Column(
+    Box(
         modifier = modifier
             .defaultMinSize(minHeight = 48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(pillColor)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 4.dp)
+            .padding(vertical = 5.dp)
             .testTag(item.testTag),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-            contentDescription = label,
-            tint = contentColor,
-            modifier = Modifier.size(22.dp)
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontFamily = com.example.ui.theme.OutfitFamily,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-            ),
-            color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Icon(
+                imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                contentDescription = label,
+                tint = contentColor,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = PlusJakartaSansFamily,
+                    fontSize = 10.sp,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                ),
+                color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }

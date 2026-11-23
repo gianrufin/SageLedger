@@ -9,7 +9,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -20,19 +19,16 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -43,27 +39,29 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
+import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.NotificationsNone
+import androidx.compose.material.icons.rounded.Savings
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -75,6 +73,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -88,6 +87,7 @@ import com.example.core.CurrencyFormatter
 import com.example.data.model.GitHubReleaseNotice
 import com.example.data.model.PaymentSource
 import com.example.data.model.RecurringPreset
+import com.example.data.model.SavingsProjection
 import com.example.data.model.SpendingTransaction
 import com.example.data.model.ThemeModePreference
 import com.example.notifications.SpendingAlertNotifier
@@ -96,10 +96,11 @@ import com.example.ui.components.AccountProfileSheet
 import com.example.ui.components.AlertsInboxSheet
 import com.example.ui.components.CrispCard
 import com.example.ui.components.LedgerTransactionRow
+import com.example.ui.components.LiveSpendSparklineChart
 import com.example.ui.components.SplitCurrencyText
 import com.example.ui.components.springPressScale
+import com.example.ui.theme.BentoEyebrowStyle
 import com.example.ui.theme.LocalLedgerExtraColors
-import com.example.ui.theme.MonoCodeStyle
 import com.example.ui.theme.TabularAmountStyle
 import com.example.ui.viewmodel.DashboardSnapshot
 import com.example.ui.viewmodel.UiState
@@ -139,7 +140,7 @@ fun OverviewScreen(
     userInitial: String = "S",
     userName: String = "",
     userEmail: String = "",
-    themeMode: ThemeModePreference = ThemeModePreference.SYSTEM,
+    themeMode: ThemeModePreference = ThemeModePreference.DARK,
     onSetThemeMode: (ThemeModePreference) -> Unit = {},
     onSignOut: () -> Unit = {},
     onNavigateToReports: () -> Unit = {},
@@ -242,7 +243,7 @@ fun OverviewScreen(
         when (state) {
             is UiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             is UiState.Error -> {
@@ -295,12 +296,11 @@ fun OverviewScreen(
                         .fillMaxWidth()
                         .widthIn(max = 760.dp)
                         .statusBarsPadding(),
-                    contentPadding = PaddingValues(top = 6.dp, bottom = 148.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    contentPadding = PaddingValues(top = 6.dp, bottom = 132.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Clean Minimalist Top Bar (no bulky bordered capsules)
                     item(key = "top_utility_bar") {
-                        LedgerTopBar(
+                        BentoTopBar(
                             userInitial = userInitial,
                             userName = userName,
                             unreviewedCount = data.unreviewedCount,
@@ -311,18 +311,83 @@ fun OverviewScreen(
                         )
                     }
 
-                    // Open Paper-Canvas Editorial Spend Hero (no enclosing white card)
-                    item(key = "open_spend_hero") {
+                    // Live Sparkline Chart + Clean Balance Hero Bento
+                    item(key = "sparkline_hero_bento") {
                         AnimatedEntrance {
-                            OpenLedgerSpendingHero(
+                            LiveSpendHeroBento(
                                 spentCents = data.monthSpentCents,
                                 budgetCents = data.settings.monthlyBudgetCents,
-                                dailyAllowanceCents = data.savingsProjection.dailyAllowanceCents,
-                                remainingDaysInMonth = data.savingsProjection.remainingDaysInMonth,
-                                noSpendDaysThisMonth = data.savingsProjection.noSpendDaysThisMonth,
+                                projection = data.savingsProjection,
                                 currencyCode = currency,
-                                modifier = Modifier.padding(horizontal = 20.dp)
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             )
+                        }
+                    }
+
+                    // 2x2 Dark Bento Metrics Grid
+                    item(key = "bento_metrics_grid") {
+                        AnimatedEntrance(delayIdx = 1) {
+                            BentoMetricsGrid(
+                                projection = data.savingsProjection,
+                                budgetCents = data.settings.monthlyBudgetCents,
+                                spentCents = data.monthSpentCents,
+                                incomeCents = data.settings.monthlyIncomeCents,
+                                currencyCode = currency,
+                                onIncomeClick = onNavigateToPlan,
+                                onProjectedClick = onNavigateToReports,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
+
+                    // Contextual Alert Inbox Strip when unreviewed items exist
+                    if (data.unreviewedCount > 0) {
+                        item(key = "unreviewed_inbox_strip") {
+                            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                CrispCard(
+                                    onClick = { showAlertsSheet = true },
+                                    shape = RoundedCornerShape(18.dp),
+                                    containerColor = extraColors.expenseCoralContainer,
+                                    borderColor = extraColors.expenseCoral.copy(alpha = 0.35f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .springPressScale()
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 13.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Bolt,
+                                                contentDescription = null,
+                                                tint = extraColors.expenseCoral,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Text(
+                                                text = "${data.unreviewedCount} captured alert${if (data.unreviewedCount > 1) "s" else ""} ready · Review inbox",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = extraColors.onExpenseCoralContainer,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                                            contentDescription = null,
+                                            tint = extraColors.expenseCoral,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -346,25 +411,9 @@ fun OverviewScreen(
                         }
                     }
 
-                    // Unified 2-Column Architectural Ledger Summary
-                    item(key = "unified_money_summary") {
-                        AnimatedEntrance {
-                            UnifiedMoneySummarySheet(
-                                incomeCents = data.settings.monthlyIncomeCents,
-                                projectedSavingsCents = data.savingsProjection.projectedSavingsCents,
-                                unreviewedCount = data.unreviewedCount,
-                                currencyCode = currency,
-                                onIncomeClick = onNavigateToPlan,
-                                onPaceClick = onNavigateToReports,
-                                onInboxClick = { showAlertsSheet = true },
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
-                    }
-
-                    // Quick-Add Strip (crisp compact tokens)
+                    // Quick-Log Strip
                     item(key = "quick_add_recurring") {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -374,7 +423,7 @@ fun OverviewScreen(
                             ) {
                                 Text(
                                     text = "QUICK LOG",
-                                    style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.8.sp),
+                                    style = BentoEyebrowStyle,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
@@ -395,13 +444,13 @@ fun OverviewScreen(
                                 items(data.recurringPresets, key = { it.id }) { preset ->
                                     CrispCard(
                                         onClick = { onQuickAddPreset(preset) },
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(16.dp),
                                         modifier = Modifier
                                             .springPressScale()
                                             .testTag("quick_add_chip_${preset.id}")
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
@@ -424,7 +473,7 @@ fun OverviewScreen(
                         }
                     }
 
-                    // Transactions Header, Search & Source Filter Tabs
+                    // Transactions Header, Search & Source Filter Pills
                     item(key = "transactions_controls") {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Row(
@@ -448,13 +497,13 @@ fun OverviewScreen(
                                             showSearchField = !showSearchField
                                             if (!showSearchField) searchQuery = ""
                                         },
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = RoundedCornerShape(12.dp),
                                         color = if (showSearchField) {
                                             MaterialTheme.colorScheme.primaryContainer
                                         } else {
                                             MaterialTheme.colorScheme.surface
                                         },
-                                        border = BorderStroke(0.9.dp, extraColors.hairlineBorder),
+                                        border = BorderStroke(1.dp, extraColors.hairlineBorder),
                                         modifier = Modifier
                                             .size(40.dp)
                                             .testTag("toggle_tx_search_button")
@@ -463,16 +512,20 @@ fun OverviewScreen(
                                             Icon(
                                                 imageVector = if (showSearchField) Icons.Rounded.Close else Icons.Rounded.Search,
                                                 contentDescription = "Search merchants",
-                                                tint = MaterialTheme.colorScheme.onSurface,
+                                                tint = if (showSearchField) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface
+                                                },
                                                 modifier = Modifier.size(18.dp)
                                             )
                                         }
                                     }
                                     Surface(
                                         onClick = onManualEntryClick,
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.surface,
-                                        border = BorderStroke(0.9.dp, extraColors.hairlineBorder),
+                                        border = BorderStroke(1.dp, extraColors.hairlineBorder),
                                         modifier = Modifier
                                             .defaultMinSize(minHeight = 40.dp)
                                             .testTag("manual_reconcile_link")
@@ -520,7 +573,7 @@ fun OverviewScreen(
                                         }
                                     },
                                     singleLine = true,
-                                    shape = RoundedCornerShape(14.dp),
+                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp)
@@ -528,41 +581,44 @@ fun OverviewScreen(
                                 )
                             }
 
-                            // Crisp Minimal Segmented Source Filter Tabs
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .horizontalScroll(rememberScrollState())
                                     .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 TransactionFilter.entries.forEach { filter ->
                                     val selected = activeFilter == filter
+                                    val isEWalletFilter = filter == TransactionFilter.E_WALLET
+                                    val selectedBg = when {
+                                        isEWalletFilter -> extraColors.cobaltAccent
+                                        filter == TransactionFilter.NEEDS_REVIEW -> extraColors.expenseCoral
+                                        else -> MaterialTheme.colorScheme.primary
+                                    }
+                                    val selectedText = if (isEWalletFilter || filter == TransactionFilter.NEEDS_REVIEW) {
+                                        Color(0xFF061624)
+                                    } else {
+                                        MaterialTheme.colorScheme.onPrimary
+                                    }
+
                                     Surface(
                                         onClick = { activeFilter = filter },
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = if (selected) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            Color.Transparent
-                                        },
-                                        border = if (selected) null else BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                                        shape = RoundedCornerShape(50),
+                                        color = if (selected) selectedBg else MaterialTheme.colorScheme.surface,
+                                        border = if (selected) null else BorderStroke(0.9.dp, extraColors.hairlineBorder),
                                         modifier = Modifier
                                             .defaultMinSize(minHeight = 36.dp)
                                             .testTag("tx_filter_${filter.name.lowercase()}")
                                     ) {
                                         Box(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
                                                 text = filter.label,
                                                 style = MaterialTheme.typography.labelLarge,
-                                                color = if (selected) {
-                                                    MaterialTheme.colorScheme.onPrimary
-                                                } else {
-                                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                                }
+                                                color = if (selected) selectedText else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -575,11 +631,13 @@ fun OverviewScreen(
                         item(key = "empty_transactions") {
                             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                                 CrispCard(
-                                    shape = RoundedCornerShape(18.dp),
+                                    shape = RoundedCornerShape(22.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(28.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(28.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
@@ -610,7 +668,7 @@ fun OverviewScreen(
                         item(key = "empty_filtered") {
                             Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                                 CrispCard(
-                                    shape = RoundedCornerShape(18.dp),
+                                    shape = RoundedCornerShape(22.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(
@@ -643,7 +701,6 @@ fun OverviewScreen(
                             }
                         }
                     } else {
-                        // Unified Daily Ledger Sheets (each day = 1 paper sheet with inset hairline dividers)
                         items(
                             items = groupedTransactions,
                             key = { "day_sheet_${it.dayKey}" }
@@ -663,7 +720,7 @@ fun OverviewScreen(
                                 ) {
                                     Text(
                                         text = group.headerLabel.uppercase(Locale.getDefault()),
-                                        style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.6.sp),
+                                        style = BentoEyebrowStyle,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
@@ -676,10 +733,10 @@ fun OverviewScreen(
                                 }
 
                                 CrispCard(
-                                    shape = RoundedCornerShape(18.dp),
+                                    shape = RoundedCornerShape(22.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(18.dp))
+                                        .clip(RoundedCornerShape(22.dp))
                                 ) {
                                     group.items.forEachIndexed { idx, tx ->
                                         LedgerTransactionRow(
@@ -701,7 +758,7 @@ fun OverviewScreen(
 }
 
 @Composable
-private fun LedgerTopBar(
+private fun BentoTopBar(
     userInitial: String,
     userName: String,
     unreviewedCount: Int,
@@ -721,31 +778,32 @@ private fun LedgerTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Upper-left minimal account trigger -> AccountProfileSheet
+        // Upper-left Account Trigger -> AccountProfileSheet
         Row(
             modifier = Modifier
                 .defaultMinSize(minHeight = 48.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(50))
                 .clickable(onClick = onAvatarClick)
-                .padding(end = 8.dp)
+                .padding(end = 10.dp)
                 .testTag("header_avatar_button"),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(34.dp)
+                color = MaterialTheme.colorScheme.primaryContainer,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
+                modifier = Modifier.size(38.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = userInitial.take(1).uppercase(Locale.US),
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -758,8 +816,8 @@ private fun LedgerTopBar(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Account",
-                    style = MonoCodeStyle.copy(fontSize = 10.sp),
+                    text = "Account & theme",
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -767,55 +825,62 @@ private fun LedgerTopBar(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .defaultMinSize(minHeight = 44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable(onClick = onMonthClick)
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            Surface(
+                onClick = onMonthClick,
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, extraColors.hairlineBorder),
+                modifier = Modifier.defaultMinSize(minHeight = 40.dp)
             ) {
-                Text(
-                    text = monthLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Icon(
-                    imageVector = Icons.Rounded.KeyboardArrowDown,
-                    contentDescription = "Open reports",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp)
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = monthLabel,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Icon(
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = "Open reports",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
 
-            // Upper-right Bell trigger -> AlertsInboxSheet
-            Box(
+            // Upper-right Bell Trigger -> AlertsInboxSheet
+            Surface(
+                onClick = onBellClick,
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, extraColors.hairlineBorder),
                 modifier = Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable(onClick = onBellClick)
-                    .testTag("header_bell_button"),
-                contentAlignment = Alignment.Center
+                    .testTag("header_bell_button")
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Notifications,
-                    contentDescription = "Open Alerts Inbox",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(22.dp)
-                )
-                if (listenerNeedsAttention || unreviewedCount > 0) {
-                    Surface(
-                        shape = CircleShape,
-                        color = extraColors.expenseCoral,
-                        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.background),
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .size(9.dp)
-                    ) {}
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Rounded.Notifications,
+                        contentDescription = "Open Alerts Inbox",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    if (listenerNeedsAttention || unreviewedCount > 0) {
+                        Surface(
+                            shape = CircleShape,
+                            color = extraColors.expenseCoral,
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.surface),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(9.dp)
+                                .size(9.dp)
+                        ) {}
+                    }
                 }
             }
         }
@@ -823,258 +888,241 @@ private fun LedgerTopBar(
 }
 
 @Composable
-private fun OpenLedgerSpendingHero(
+private fun LiveSpendHeroBento(
     spentCents: Long,
     budgetCents: Long,
-    dailyAllowanceCents: Long,
-    remainingDaysInMonth: Int,
-    noSpendDaysThisMonth: Int,
+    projection: SavingsProjection,
     currencyCode: String,
     modifier: Modifier = Modifier
 ) {
     val extraColors = LocalLedgerExtraColors.current
     val safeTarget = budgetCents.coerceAtLeast(1L)
-    val spendFrac = (spentCents.toFloat() / safeTarget.toFloat()).coerceIn(0f, 1f)
-    val animFrac by animateFloatAsState(
-        targetValue = spendFrac,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessLow),
-        label = "openHeroRail"
-    )
     val remainingCents = budgetCents - spentCents
     val isOver = remainingCents < 0L
     val pctUsed = ((spentCents.toDouble() / safeTarget.toDouble()) * 100.0).roundToInt()
+    val heroAccent = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.primary
+    val monthHeader = remember {
+        SimpleDateFormat("MMMM SPEND", Locale.getDefault()).format(Date()).uppercase(Locale.getDefault())
+    }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    CrispCard(
+        shape = RoundedCornerShape(26.dp),
+        accentGlowColor = heroAccent,
+        modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(
-                text = "SPENT THIS MONTH",
-                style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.9.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = "$pctUsed% OF LIMIT",
-                style = MonoCodeStyle.copy(
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.primary
-                )
-            )
-        }
-
-        SplitCurrencyText(
-            amountCents = spentCents,
-            currencyCode = currencyCode,
-            style = TabularAmountStyle.copy(
-                fontSize = 52.sp,
-                letterSpacing = (-1.8).sp
-            ),
-            color = MaterialTheme.colorScheme.onBackground,
-            fractionAlpha = 0.36f
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            LinearProgressIndicator(
-                progress = { animFrac },
-                color = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(5.dp)
-                    .clip(RoundedCornerShape(3.dp))
-            )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
+                    text = monthHeader,
+                    style = BentoEyebrowStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = if (isOver) extraColors.expenseCoralContainer else extraColors.positiveGreenContainer
+                ) {
+                    Text(
+                        text = "$pctUsed% OF ${CurrencyFormatter.formatCompactCents(budgetCents, currencyCode)}",
+                        style = BentoEyebrowStyle.copy(
+                            fontSize = 10.sp,
+                            color = if (isOver) extraColors.onExpenseCoralContainer else extraColors.onPositiveGreenContainer
+                        ),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SplitCurrencyText(
+                    amountCents = spentCents,
+                    currencyCode = currencyCode,
+                    style = TabularAmountStyle.copy(
+                        fontSize = 44.sp,
+                        letterSpacing = (-1.6).sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fractionAlpha = 0.42f
+                )
+                Text(
                     text = if (isOver) {
-                        "Over budget by ${CurrencyFormatter.formatCents(-remainingCents, currencyCode)}"
+                        "Over limit by ${CurrencyFormatter.formatCents(-remainingCents, currencyCode)}"
                     } else {
-                        "${CurrencyFormatter.formatCents(remainingCents, currencyCode)} remaining"
+                        "${CurrencyFormatter.formatCents(remainingCents, currencyCode)} remaining this month"
                     },
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                     color = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = "${CurrencyFormatter.formatCompactCents(budgetCents, currencyCode)} cap",
-                    style = MonoCodeStyle.copy(fontSize = 11.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // Open architectural 2-column stat strip (Safe-to-Spend Today & No-Spend Days)
-        HorizontalDivider(thickness = 0.8.dp, color = extraColors.hairlineBorder)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min)
-                .padding(vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("safe_to_spend_pill"),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = "SAFE TODAY",
-                    style = MonoCodeStyle.copy(fontSize = 10.sp, letterSpacing = 0.6.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = if (isOver || dailyAllowanceCents <= 0L) {
-                        "Limit reached · ${remainingDaysInMonth}d"
-                    } else {
-                        "${CurrencyFormatter.formatCents(dailyAllowanceCents, currencyCode)}/day"
-                    },
-                    style = TabularAmountStyle.copy(
-                        fontSize = 16.sp,
-                        color = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.onBackground
-                    )
-                )
             }
 
-            VerticalDivider(
-                thickness = 0.8.dp,
-                color = extraColors.hairlineBorder,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(horizontal = 14.dp, vertical = 2.dp)
+            LiveSpendSparklineChart(
+                projection = projection,
+                currencyCode = currencyCode
             )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("no_spend_days_badge"),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = "NO-SPEND STREAK",
-                    style = MonoCodeStyle.copy(fontSize = 10.sp, letterSpacing = 0.6.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "$noSpendDaysThisMonth ${if (noSpendDaysThisMonth == 1) "day" else "days"} this month",
-                    style = TabularAmountStyle.copy(
-                        fontSize = 16.sp,
-                        color = extraColors.positiveGreen
-                    )
-                )
-            }
         }
-        HorizontalDivider(thickness = 0.8.dp, color = extraColors.hairlineBorder)
     }
 }
 
 @Composable
-private fun UnifiedMoneySummarySheet(
+private fun BentoMetricsGrid(
+    projection: SavingsProjection,
+    budgetCents: Long,
+    spentCents: Long,
     incomeCents: Long,
-    projectedSavingsCents: Long,
-    unreviewedCount: Int,
     currencyCode: String,
     onIncomeClick: () -> Unit,
-    onPaceClick: () -> Unit,
-    onInboxClick: () -> Unit,
+    onProjectedClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val extraColors = LocalLedgerExtraColors.current
+    val isOver = budgetCents - spentCents < 0L
+    val projectedPositive = projection.projectedSavingsCents >= 0L
 
-    CrispCard(
-        shape = RoundedCornerShape(18.dp),
-        modifier = modifier.fillMaxWidth()
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(
+            BentoMetricTile(
+                icon = Icons.Rounded.Shield,
+                accentColor = if (isOver) extraColors.expenseCoral else extraColors.cobaltAccent,
+                eyebrow = "SAFE TODAY",
+                valueText = if (isOver || projection.dailyAllowanceCents <= 0L) {
+                    "Limit hit"
+                } else {
+                    CurrencyFormatter.formatCents(projection.dailyAllowanceCents, currencyCode)
+                },
+                subtitle = if (isOver || projection.dailyAllowanceCents <= 0L) {
+                    "${projection.remainingDaysInMonth} days left"
+                } else {
+                    "per day · ${projection.remainingDaysInMonth}d left"
+                },
+                valueColor = if (isOver) extraColors.expenseCoral else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .weight(1f)
-                    .clickable(onClick = onIncomeClick)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = "INCOME",
-                    style = MonoCodeStyle.copy(fontSize = 10.sp, letterSpacing = 0.7.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                SplitCurrencyText(
-                    amountCents = incomeCents,
-                    currencyCode = currencyCode,
-                    style = TabularAmountStyle.copy(fontSize = 20.sp),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            VerticalDivider(
-                thickness = 0.8.dp,
-                color = extraColors.hairlineBorder,
-                modifier = Modifier.fillMaxHeight()
+                    .testTag("safe_to_spend_pill")
             )
 
-            Column(
+            BentoMetricTile(
+                icon = Icons.Rounded.LocalFireDepartment,
+                accentColor = extraColors.positiveGreen,
+                eyebrow = "NO-SPEND STREAK",
+                valueText = "${projection.noSpendDaysThisMonth} ${if (projection.noSpendDaysThisMonth == 1) "day" else "days"}",
+                subtitle = "zero spend this month",
+                valueColor = extraColors.positiveGreen,
                 modifier = Modifier
                     .weight(1f)
-                    .clickable(onClick = onPaceClick)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = if (projectedSavingsCents >= 0L) "PROJECTED SAVED" else "PACE OVER",
-                    style = MonoCodeStyle.copy(fontSize = 10.sp, letterSpacing = 0.7.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                SplitCurrencyText(
-                    amountCents = if (projectedSavingsCents >= 0L) projectedSavingsCents else -projectedSavingsCents,
-                    currencyCode = currencyCode,
-                    style = TabularAmountStyle.copy(fontSize = 20.sp),
-                    color = if (projectedSavingsCents >= 0L) extraColors.positiveGreen else extraColors.expenseCoral,
-                    showPlusSign = projectedSavingsCents >= 0L
-                )
-            }
+                    .testTag("no_spend_days_badge")
+            )
         }
 
-        HorizontalDivider(thickness = 0.8.dp, color = extraColors.hairlineBorder)
-
-        val footerClick = if (unreviewedCount > 0) onInboxClick else onPaceClick
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = footerClick)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text(
-                text = if (unreviewedCount > 0) {
-                    "$unreviewedCount captured alert${if (unreviewedCount > 1) "s" else ""} waiting for confirmation"
-                } else {
-                    "View category & channel breakdown"
-                },
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                color = if (unreviewedCount > 0) extraColors.expenseCoral else MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            BentoMetricTile(
+                icon = Icons.Rounded.AccountBalanceWallet,
+                accentColor = extraColors.amberAccent,
+                eyebrow = "MONTHLY INCOME",
+                valueText = CurrencyFormatter.formatCompactCents(incomeCents, currencyCode),
+                subtitle = "Limit ${CurrencyFormatter.formatCompactCents(budgetCents, currencyCode)}",
+                valueColor = MaterialTheme.colorScheme.onSurface,
+                onClick = onIncomeClick,
                 modifier = Modifier.weight(1f)
             )
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp)
+
+            val absProjected = if (projectedPositive) projection.projectedSavingsCents else -projection.projectedSavingsCents
+            val projectedPrefix = if (projectedPositive && absProjected > 0L) "+" else if (!projectedPositive) "-" else ""
+            BentoMetricTile(
+                icon = Icons.Rounded.Savings,
+                accentColor = if (projectedPositive) extraColors.positiveGreen else extraColors.expenseCoral,
+                eyebrow = if (projectedPositive) "PROJECTED SAVED" else "PROJECTED OVER",
+                valueText = projectedPrefix + CurrencyFormatter.formatCompactCents(absProjected, currencyCode),
+                subtitle = "month-end pace",
+                valueColor = if (projectedPositive) extraColors.positiveGreen else extraColors.expenseCoral,
+                onClick = onProjectedClick,
+                modifier = Modifier.weight(1f)
             )
+        }
+    }
+}
+
+@Composable
+private fun BentoMetricTile(
+    icon: ImageVector,
+    accentColor: Color,
+    eyebrow: String,
+    valueText: String,
+    subtitle: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
+    CrispCard(
+        onClick = onClick,
+        shape = RoundedCornerShape(22.dp),
+        accentGlowColor = accentColor,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = accentColor.copy(alpha = 0.14f),
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = eyebrow,
+                    style = BentoEyebrowStyle.copy(fontSize = 9.5.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = valueText,
+                    style = TabularAmountStyle.copy(
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = valueColor
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
@@ -1128,10 +1176,11 @@ private fun CapturePermissionBanner(
     onRequestPostNotif: () -> Unit,
     onOpenListenerSettings: () -> Unit
 ) {
+    val extraColors = LocalLedgerExtraColors.current
     CrispCard(
-        shape = RoundedCornerShape(16.dp),
-        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+        shape = RoundedCornerShape(20.dp),
+        containerColor = extraColors.cobaltContainer.copy(alpha = 0.72f),
+        borderColor = extraColors.cobaltAccent.copy(alpha = 0.35f),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -1145,18 +1194,18 @@ private fun CapturePermissionBanner(
                 Icon(
                     imageVector = Icons.Rounded.NotificationsNone,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    tint = extraColors.cobaltAccent
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Enable automatic purchase capture",
                         style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = extraColors.onCobaltContainer
                     )
                     Text(
                         text = "Allow SageLedger to read Wallet, E-Wallet, card, and SMS alerts automatically.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
+                        color = extraColors.onCobaltContainer.copy(alpha = 0.85f)
                     )
                 }
             }

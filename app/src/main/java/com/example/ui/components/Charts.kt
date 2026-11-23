@@ -3,9 +3,11 @@ package com.example.ui.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -59,6 +60,7 @@ import com.example.core.CurrencyFormatter
 import com.example.data.model.CategoryBreakdownItem
 import com.example.data.model.SavingsProjection
 import com.example.data.model.TrendBucket
+import com.example.ui.theme.BentoEyebrowStyle
 import com.example.ui.theme.LocalLedgerExtraColors
 import com.example.ui.theme.TabularAmountStyle
 import kotlin.math.PI
@@ -67,6 +69,342 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 import kotlin.math.sin
+
+/**
+ * Interactive Revolut / Copilot-style Live Month-to-Date Sparkline Hero Chart.
+ * Plots actual cumulative daily spending as a glowing curve, projected month-end pace
+ * as a crisp dashed continuation, and supports touch/drag scrubbing per day.
+ */
+@Composable
+fun LiveSpendSparklineChart(
+    projection: SavingsProjection,
+    currencyCode: String,
+    modifier: Modifier = Modifier
+) {
+    val extraColors = LocalLedgerExtraColors.current
+    val isOverBudget = projection.monthlyBudgetCents > 0L &&
+        projection.spentToDateCents > projection.monthlyBudgetCents
+    val lineColor = if (isOverBudget) extraColors.expenseCoral else MaterialTheme.colorScheme.primary
+    val projectedColor = if (projection.projectedMonthEndSpendCents <= projection.monthlyBudgetCents ||
+        projection.monthlyBudgetCents <= 0L
+    ) {
+        extraColors.cobaltAccent.copy(alpha = 0.72f)
+    } else {
+        extraColors.expenseCoral.copy(alpha = 0.72f)
+    }
+    val budgetGuideColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)
+    val dotCoreColor = MaterialTheme.colorScheme.surface
+
+    val totalDays = projection.daysInMonth.coerceAtLeast(2)
+    val currentIdx = (projection.currentDayOfMonth - 1).coerceIn(0, totalDays - 1)
+    val actualPoints = projection.actualCumulativeDailyCents
+    val projectedPoints = projection.projectedDailyCents
+
+    var scrubbedDayIdx by remember(projection) { mutableStateOf<Int?>(null) }
+    var revealed by remember(projection) { mutableStateOf(false) }
+    LaunchedEffect(projection) { revealed = true }
+    val revealProgress by animateFloatAsState(
+        targetValue = if (revealed) 1f else 0.08f,
+        animationSpec = spring(dampingRatio = 0.84f, stiffness = Spring.StiffnessLow),
+        label = "sparklineReveal"
+    )
+
+    val maxScaleCents = remember(projection) {
+        maxOf(
+            projection.spentToDateCents,
+            projection.projectedMonthEndSpendCents,
+            projection.monthlyBudgetCents,
+            1_000L
+        ).toFloat() * 1.08f
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("live_spend_sparkline"),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Live Scrubbing Tooltip Strip or Pace Legend
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val activeDay = scrubbedDayIdx
+            if (activeDay != null) {
+                val isFuture = activeDay > currentIdx
+                val cents = if (!isFuture) {
+                    actualPoints.getOrElse(activeDay) { projection.spentToDateCents }
+                } else {
+                    projectedPoints.getOrElse(activeDay) { projection.projectedMonthEndSpendCents }
+                }
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    border = BorderStroke(0.8.dp, lineColor.copy(alpha = 0.45f))
+                ) {
+                    Text(
+                        text = "${if (isFuture) "Proj. " else ""}Day ${activeDay + 1} · ${CurrencyFormatter.formatCents(cents, currencyCode)}",
+                        style = TabularAmountStyle.copy(
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = lineColor,
+                            modifier = Modifier.size(7.dp)
+                        ) {}
+                        Text(
+                            text = "Actual",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = projectedColor,
+                            modifier = Modifier.size(7.dp)
+                        ) {}
+                        Text(
+                            text = "Projected pace",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = "Tap curve to inspect",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+        }
+
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(104.dp)
+                .pointerInput(totalDays) {
+                    detectTapGestures { offset ->
+                        val idx = ((offset.x / size.width.coerceAtLeast(1)) * (totalDays - 1))
+                            .roundToInt()
+                            .coerceIn(0, totalDays - 1)
+                        scrubbedDayIdx = if (scrubbedDayIdx == idx) null else idx
+                    }
+                }
+                .pointerInput(totalDays) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = { scrubbedDayIdx = null },
+                        onDragCancel = { scrubbedDayIdx = null }
+                    ) { change, _ ->
+                        change.consume()
+                        val idx = ((change.position.x / size.width.coerceAtLeast(1)) * (totalDays - 1))
+                            .roundToInt()
+                            .coerceIn(0, totalDays - 1)
+                        scrubbedDayIdx = idx
+                    }
+                }
+        ) {
+            val w = size.width
+            val h = size.height
+            val padTop = 10.dp.toPx()
+            val padBottom = 8.dp.toPx()
+            val plotH = (h - padTop - padBottom).coerceAtLeast(1f)
+            val stepX = w / (totalDays - 1).coerceAtLeast(1).toFloat()
+
+            fun yFor(cents: Long): Float {
+                val frac = (cents.toFloat() / maxScaleCents).coerceIn(0f, 1f)
+                return padTop + plotH * (1f - frac)
+            }
+
+            // Budget limit horizontal reference guide
+            if (projection.monthlyBudgetCents > 0L) {
+                val budgetY = yFor(projection.monthlyBudgetCents)
+                drawLine(
+                    color = budgetGuideColor,
+                    start = Offset(0f, budgetY),
+                    end = Offset(w, budgetY),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f))
+                )
+            }
+
+            // Baseline track
+            drawLine(
+                color = budgetGuideColor.copy(alpha = 0.35f),
+                start = Offset(0f, h - padBottom),
+                end = Offset(w, h - padBottom),
+                strokeWidth = 0.8.dp.toPx()
+            )
+
+            // Projected continuation dashed line
+            if (projectedPoints.size >= totalDays && currentIdx < totalDays - 1) {
+                val projPath = Path()
+                for (i in currentIdx until totalDays) {
+                    val x = i * stepX
+                    val y = yFor(projectedPoints[i])
+                    if (i == currentIdx) {
+                        projPath.moveTo(x, y)
+                    } else {
+                        val prevX = (i - 1) * stepX
+                        val prevY = yFor(projectedPoints[i - 1])
+                        val midX = (prevX + x) / 2f
+                        projPath.cubicTo(midX, prevY, midX, y, x, y)
+                    }
+                }
+                drawPath(
+                    path = projPath,
+                    color = projectedColor,
+                    style = Stroke(
+                        width = 2.dp.toPx(),
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+                    )
+                )
+            }
+
+            // Actual cumulative spend glowing spline
+            if (actualPoints.isNotEmpty()) {
+                val visibleCount = (actualPoints.size * revealProgress)
+                    .roundToInt()
+                    .coerceIn(1, actualPoints.size)
+                val linePath = Path()
+                val fillPath = Path()
+
+                for (i in 0 until visibleCount) {
+                    val x = i * stepX
+                    val y = yFor(actualPoints[i])
+                    if (i == 0) {
+                        linePath.moveTo(x, y)
+                        fillPath.moveTo(x, h - padBottom)
+                        fillPath.lineTo(x, y)
+                    } else {
+                        val prevX = (i - 1) * stepX
+                        val prevY = yFor(actualPoints[i - 1])
+                        val midX = (prevX + x) / 2f
+                        linePath.cubicTo(midX, prevY, midX, y, x, y)
+                        fillPath.cubicTo(midX, prevY, midX, y, x, y)
+                    }
+                }
+
+                val lastIdx = visibleCount - 1
+                val lastX = lastIdx * stepX
+                val lastY = yFor(actualPoints[lastIdx])
+                fillPath.lineTo(lastX, h - padBottom)
+                fillPath.close()
+
+                drawPath(
+                    path = fillPath,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            lineColor.copy(alpha = 0.28f),
+                            lineColor.copy(alpha = 0.04f),
+                            Color.Transparent
+                        ),
+                        startY = padTop,
+                        endY = h - padBottom
+                    )
+                )
+                drawPath(
+                    path = linePath,
+                    color = lineColor,
+                    style = Stroke(
+                        width = 2.8.dp.toPx(),
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
+                )
+
+                // Current day glowing node
+                drawCircle(
+                    color = lineColor.copy(alpha = 0.24f),
+                    radius = 9.dp.toPx(),
+                    center = Offset(lastX, lastY)
+                )
+                drawCircle(
+                    color = dotCoreColor,
+                    radius = 4.2.dp.toPx(),
+                    center = Offset(lastX, lastY)
+                )
+                drawCircle(
+                    color = lineColor,
+                    radius = 4.2.dp.toPx(),
+                    center = Offset(lastX, lastY),
+                    style = Stroke(width = 2.2.dp.toPx())
+                )
+            }
+
+            // Scrubbed inspection crosshair
+            val inspectIdx = scrubbedDayIdx
+            if (inspectIdx != null) {
+                val inspectX = inspectIdx * stepX
+                val inspectCents = if (inspectIdx <= currentIdx) {
+                    actualPoints.getOrElse(inspectIdx) { projection.spentToDateCents }
+                } else {
+                    projectedPoints.getOrElse(inspectIdx) { projection.projectedMonthEndSpendCents }
+                }
+                val inspectY = yFor(inspectCents)
+                val inspectColor = if (inspectIdx <= currentIdx) lineColor else projectedColor
+
+                drawLine(
+                    color = inspectColor.copy(alpha = 0.55f),
+                    start = Offset(inspectX, padTop),
+                    end = Offset(inspectX, h - padBottom),
+                    strokeWidth = 1.2.dp.toPx()
+                )
+                drawCircle(
+                    color = inspectColor.copy(alpha = 0.28f),
+                    radius = 8.dp.toPx(),
+                    center = Offset(inspectX, inspectY)
+                )
+                drawCircle(
+                    color = inspectColor,
+                    radius = 4.2.dp.toPx(),
+                    center = Offset(inspectX, inspectY)
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "DAY 1",
+                style = BentoEyebrowStyle.copy(fontSize = 9.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+            )
+            Text(
+                text = "TODAY · DAY ${projection.currentDayOfMonth}",
+                style = BentoEyebrowStyle.copy(fontSize = 9.5.sp, color = lineColor)
+            )
+            Text(
+                text = "DAY $totalDays",
+                style = BentoEyebrowStyle.copy(fontSize = 9.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+            )
+        }
+    }
+}
 
 private data class DonutSegmentGeometry(
     val index: Int,
@@ -125,7 +463,7 @@ fun CategoryDonutChart(
         val density = LocalDensity.current
         val diameterDp = minOf(maxWidth, 236.dp)
         val diameterPx = with(density) { diameterDp.toPx() }
-        val strokeWidthDp = 28.dp
+        val strokeWidthDp = 26.dp
         val strokeWidthPx = with(density) { strokeWidthDp.toPx() }
         val radiusPx = (diameterPx - strokeWidthPx) / 2f
 
@@ -141,7 +479,7 @@ fun CategoryDonutChart(
             val availableSweep = (360f - totalGap).coerceAtLeast(180f)
 
             val built = mutableListOf<DonutSegmentGeometry>()
-            var cursor = -84f // slight tilt just like the playful mockup
+            var cursor = -84f
             nonZero.forEachIndexed { idx, cat ->
                 val rawFrac = cat.spentCents.toFloat() / totalRingCents.toFloat()
                 val sweep = (rawFrac * availableSweep).coerceAtLeast(2f)
@@ -226,7 +564,6 @@ fun CategoryDonutChart(
                 val arcSize = Size(size.width - strokeWidthPx, size.height - strokeWidthPx)
                 val arcTopLeft = Offset(inset, inset)
 
-                // Subtle recessed ring underlayer
                 drawCircle(
                     color = hatchBase.copy(alpha = 0.35f),
                     radius = radiusPx,
@@ -236,7 +573,6 @@ fun CategoryDonutChart(
                 segments.forEach { seg ->
                     val animatedSweep = (seg.sweepAngle * sweepReveal).coerceAtLeast(0.5f)
                     if (seg.isRemainder) {
-                        // Draw diagonal hatched unspent budget arc
                         val outerR = radiusPx + strokeWidthPx / 2f
                         val innerR = radiusPx - strokeWidthPx / 2f
                         val center = Offset(size.width / 2f, size.height / 2f)
@@ -265,7 +601,7 @@ fun CategoryDonutChart(
                         val isSelected = seg.index == activeIdx
                         val extraStroke = if (isSelected && selectedCategoryIndex != null) 4.dp.toPx() else 0f
                         val sliceColor = if (selectedCategoryIndex != null && !isSelected) {
-                            seg.item.category.chartColor.copy(alpha = 0.42f)
+                            seg.item.category.chartColor.copy(alpha = 0.38f)
                         } else {
                             seg.item.category.chartColor
                         }
@@ -285,7 +621,6 @@ fun CategoryDonutChart(
                 }
             }
 
-            // Center figure
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -312,7 +647,6 @@ fun CategoryDonutChart(
                 )
             }
 
-            // Floating dark % pill anchored along the active slice's outer arc
             if (activeItem != null) {
                 val pct = (activeItem.shareFraction * 100f).roundToInt().coerceIn(1, 100)
                 val badgeRadiusPx = radiusPx + strokeWidthPx * 0.56f
@@ -324,7 +658,7 @@ fun CategoryDonutChart(
                     shape = RoundedCornerShape(50),
                     color = extraColors.contrastPillBg,
                     shadowElevation = 4.dp,
-                    border = androidx.compose.foundation.BorderStroke(2.dp, surfaceColor),
+                    border = BorderStroke(2.dp, surfaceColor),
                     modifier = Modifier.offset { IntOffset(offsetX, offsetY) }
                 ) {
                     Text(
@@ -368,10 +702,6 @@ private fun buildAnnularWedgePath(
     return path
 }
 
-/**
- * Signature capsule progress bar from the Goals / Plan mockup:
- * Vivid fill bar + crisp thumb dot + diagonal-hatched unfilled remainder track.
- */
 @Composable
 fun HatchedGoalProgressBar(
     fraction: Float,
@@ -408,7 +738,6 @@ fun HatchedGoalProgressBar(
             )
         }
 
-        // Hatched unfilled track
         clipPath(barRectPath) {
             drawRect(
                 color = trackBg.copy(alpha = 0.65f),
@@ -428,7 +757,6 @@ fun HatchedGoalProgressBar(
             }
         }
 
-        // Active solid fill bar
         val fillW = (size.width * animatedFraction).coerceAtLeast(if (animatedFraction > 0f) barH else 0f)
         if (fillW > 0f) {
             drawRoundRect(
@@ -455,9 +783,6 @@ fun HatchedGoalProgressBar(
     }
 }
 
-/**
- * Compact circular ring gauge ("55%", "25%", "65%") used on category budget rows.
- */
 @Composable
 fun CircularPercentRing(
     percentage: Int,
@@ -536,6 +861,7 @@ fun SavingsProjectionChart(
     }
     val budgetLineColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
     val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+    val nodeCenter = MaterialTheme.colorScheme.surface
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -655,7 +981,7 @@ fun SavingsProjectionChart(
                     center = Offset(lastX, lastY)
                 )
                 drawCircle(
-                    color = thumbColorFix(surfaceColor = Color.White),
+                    color = nodeCenter,
                     radius = 4.5.dp.toPx(),
                     center = Offset(lastX, lastY)
                 )
@@ -679,8 +1005,6 @@ fun SavingsProjectionChart(
         }
     }
 }
-
-private fun thumbColorFix(surfaceColor: Color): Color = surfaceColor
 
 @Composable
 private fun LegendDot(color: Color, label: String) {
@@ -724,8 +1048,8 @@ fun SpendingTrendBarChart(
     )
 
     val primaryBar = MaterialTheme.colorScheme.primary
-    val secondaryBar = MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
-    val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.65f)
+    val secondaryBar = MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
+    val trackColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f)
     val maxCents = buckets.maxOfOrNull { it.amountCents }?.coerceAtLeast(100L) ?: 100L
 
     Column(
@@ -795,6 +1119,7 @@ fun SpendingTrendBarChart(
             Surface(
                 shape = RoundedCornerShape(50),
                 color = MaterialTheme.colorScheme.surfaceContainer,
+                border = BorderStroke(0.8.dp, LocalLedgerExtraColors.current.hairlineBorder),
                 modifier = Modifier.padding(top = 2.dp)
             ) {
                 Text(
