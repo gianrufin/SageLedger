@@ -2,68 +2,60 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Crisp Editorial Light Palette (Apple/Google-inspired tonal restraint)
-val EditorialCanvasLight = Color(0xFFF5F5F7)
-val EditorialCardWhite = Color(0xFFFFFFFF)
-val EditorialWellLight = Color(0xFFECEEF2)
-val EditorialTrackLight = Color(0xFFE2E5EC)
-val EditorialInkPrimary = Color(0xFF111216)
-val EditorialInkSecondary = Color(0xFF636874)
-val EditorialBorderLight = Color(0xFFE5E7EE)
-val EditorialOutlineLight = Color(0xFFC8CDD8)
+// Light Mode: Warm Archival Vellum Paper & Deep Botanical Pine Ink
+val LedgerPaperLight = Color(0xFFF6F4EF)
+val LedgerSurfaceWhite = Color(0xFFFFFFFF)
+val LedgerStoneLight = Color(0xFFEDE9E0)
+val LedgerTrackLight = Color(0xFFE3DEC9)
+val LedgerInkPrimary = Color(0xFF141615)
+val LedgerInkSecondary = Color(0xFF61635E)
+val LedgerRuleLight = Color(0xFFE4E0D8)
+val LedgerOutlineLight = Color(0xFFC8C3B8)
 
-val EditorialSagePrimary = Color(0xFF0F7B55)
-val EditorialSageContainer = Color(0xFFD9F2E6)
-val OnEditorialSageContainer = Color(0xFF073B28)
+val LedgerPinePrimary = Color(0xFF0F4C3A)
+val LedgerPineContainer = Color(0xFFDDF0E8)
+val OnLedgerPineContainer = Color(0xFF0A3326)
 
-val EditorialCobaltSecondary = Color(0xFF0A66FF)
-val EditorialCobaltContainer = Color(0xFFE0ECFF)
-val OnEditorialCobaltContainer = Color(0xFF062C6E)
+val LedgerCobaltSecondary = Color(0xFF1D4ED8)
+val LedgerCobaltContainer = Color(0xFFE0E9FF)
+val OnLedgerCobaltContainer = Color(0xFF102A6E)
 
-val EditorialAmberTertiary = Color(0xFFEA580C)
-val EditorialAmberContainer = Color(0xFFFFEDD5)
-val OnEditorialAmberContainer = Color(0xFF632102)
+val LedgerTerracotta = Color(0xFFC84B31)
+val LedgerTerracottaContainer = Color(0xFFFBE6E1)
+val OnLedgerTerracottaContainer = Color(0xFF6B1E0E)
 
-val EditorialCoralError = Color(0xFFE11D48)
-val EditorialCoralContainer = Color(0xFFFFE4E9)
-val OnEditorialCoralContainer = Color(0xFF6D0B22)
+val LedgerEmeraldPositive = Color(0xFF157F58)
+val LedgerInkPillBg = Color(0xFF141615)
+val LedgerInkPillText = Color(0xFFF6F4EF)
 
-val EditorialPositiveGreen = Color(0xFF10B981)
-val EditorialObsidianPill = Color(0xFF141519)
-val EditorialObsidianText = Color(0xFFFFFFFF)
+// Dark Mode: Matte Carbon Graphite & Sage Mint
+val LedgerPaperDark = Color(0xFF0E100F)
+val LedgerSurfaceDark = Color(0xFF171A18)
+val LedgerStoneDark = Color(0xFF202421)
+val LedgerTrackDark = Color(0xFF2C312D)
+val LedgerInkDark = Color(0xFFF4F2EC)
+val LedgerInkMutedDark = Color(0xFF9CA099)
+val LedgerRuleDark = Color(0xFF282D2A)
+val LedgerOutlineDark = Color(0xFF3E4540)
 
-// Crisp Editorial Dark Palette (OLED-friendly Charcoal)
-val EditorialCanvasDark = Color(0xFF0B0C0F)
-val EditorialCardDark = Color(0xFF15171D)
-val EditorialWellDark = Color(0xFF1F232C)
-val EditorialTrackDark = Color(0xFF2A2F3B)
-val EditorialInkDark = Color(0xFFF5F6FA)
-val EditorialInkMutedDark = Color(0xFF9BA2B2)
-val EditorialBorderDark = Color(0xFF262A35)
-val EditorialOutlineDark = Color(0xFF3A4050)
+val LedgerSageMintDark = Color(0xFF4ADE99)
+val LedgerPineDarkContainer = Color(0xFF133629)
+val OnLedgerPineDarkContainer = Color(0xFFD0FBE6)
 
-val EditorialMintDark = Color(0xFF2DD496)
-val EditorialSageDarkContainer = Color(0xFF103C2B)
-val OnEditorialSageDarkContainer = Color(0xFFD0FAE7)
+val LedgerCobaltDark = Color(0xFF7CA7FF)
+val LedgerCobaltDarkContainer = Color(0xFF162A54)
+val OnLedgerCobaltDarkContainer = Color(0xFFDCE8FF)
 
-val EditorialCobaltDark = Color(0xFF5294FF)
-val EditorialCobaltDarkContainer = Color(0xFF132C58)
-val OnEditorialCobaltDarkContainer = Color(0xFFDBE9FF)
+val LedgerTerracottaDark = Color(0xFFF27457)
+val LedgerTerracottaDarkContainer = Color(0xFF471C13)
+val OnLedgerTerracottaDarkContainer = Color(0xFFFFDBD2)
 
-val EditorialAmberDark = Color(0xFFFB923C)
-val EditorialAmberDarkContainer = Color(0xFF472008)
-val OnEditorialAmberDarkContainer = Color(0xFFFFE4CA)
-
-val EditorialCoralDark = Color(0xFFFB7185)
-val EditorialCoralDarkContainer = Color(0xFF4E1122)
-val OnEditorialCoralDarkContainer = Color(0xFFFFD9E0)
-
-// Vivid Editorial Category Accents
-val CatFoodColor = Color(0xFFF97316)        // Warm Tangerine
-val CatGroceriesColor = Color(0xFF0A66FF)   // Apple Cobalt
-val CatTransportColor = Color(0xFF10B981)   // Mint Emerald
-val CatConvenienceColor = Color(0xFF0F7B55) // Deep Sage
-val CatGadgetsColor = Color(0xFF6366F1)     // Electric Indigo
-val CatUtilitiesColor = Color(0xFFF59E0B)   // Golden Amber
-val CatShoppingColor = Color(0xFFEC4899)    // Editorial Rose
-val CatOtherColor = Color(0xFF64748B)       // Cool Slate
+// Editorial Category Palette (saturated yet restrained print inks)
+val CatFoodColor = Color(0xFFD95D39)        // Burnt Sienna
+val CatGroceriesColor = Color(0xFF1D4ED8)   // Blueprint Cobalt
+val CatTransportColor = Color(0xFF157F58)   // Botanical Sage
+val CatConvenienceColor = Color(0xFF0F4C3A) // Deep Pine
+val CatGadgetsColor = Color(0xFF4F46E5)     // Deep Indigo
+val CatUtilitiesColor = Color(0xFFB45309)   // Ochre Amber
+val CatShoppingColor = Color(0xFFBE185D)    // Muted Plum Rose
+val CatOtherColor = Color(0xFF57534E)       // Warm Stone Slate

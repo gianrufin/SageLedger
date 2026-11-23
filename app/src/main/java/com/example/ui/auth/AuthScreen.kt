@@ -27,9 +27,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
-import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,10 +43,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -63,8 +61,8 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.example.R
-import com.example.ui.components.CrispCard
 import com.example.ui.theme.LocalLedgerExtraColors
+import com.example.ui.theme.MonoCodeStyle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -118,156 +116,158 @@ fun AuthScreen(
             visible = visible,
             enter = fadeIn(spring(stiffness = Spring.StiffnessLow)) +
                 slideInVertically(
-                    initialOffsetY = { it / 12 },
-                    animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)
+                    initialOffsetY = { it / 14 },
+                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessLow)
                 )
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 480.dp)
+                    .fillMaxSize()
+                    .widthIn(max = 520.dp)
                     .padding(horizontal = 24.dp, vertical = 28.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                CrispCard(
-                    shape = RoundedCornerShape(28.dp),
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    // Minimal Brand Lockup
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(34.dp)
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                modifier = Modifier.size(52.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.AccountBalanceWallet,
-                                        contentDescription = "SageLedger emblem",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(26.dp)
-                                    )
-                                }
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = extraColors.cobaltContainer,
-                                border = BorderStroke(1.dp, extraColors.hairlineBorder)
-                            ) {
-                                Text(
-                                    text = "Private Personal Ledger",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = extraColors.cobaltAccent,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Rounded.AccountBalanceWallet,
+                                    contentDescription = "SageLedger emblem",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
+                        Column {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = "PERSONAL SPENDING MONITOR",
+                                style = MonoCodeStyle.copy(fontSize = 10.sp, letterSpacing = 0.8.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
 
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.displayLarge.copy(fontSize = 42.sp, lineHeight = 46.sp),
-                            color = MaterialTheme.colorScheme.onSurface
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Oversized Editorial Headline directly on paper canvas
+                    Text(
+                        text = "Know where every dollar goes.",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 44.sp,
+                            lineHeight = 48.sp,
+                            letterSpacing = (-1.6).sp
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = "Automatic capture for E-Wallets, Google Pay, bank cards, and SMS alerts — paired with daily safe-to-spend clarity.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Numbered Editorial Rules List (Zero floating SaaS boxes)
+                    Column {
+                        HorizontalDivider(color = extraColors.hairlineBorder, thickness = 0.9.dp)
+                        EditorialNumberedItem(
+                            index = "01",
+                            title = "Zero-friction capture",
+                            subtitle = "Detects GCash, Maya, PayPal, Google Pay, card, and SMS purchase alerts with swipe-right review."
                         )
-                        Text(
-                            text = "Effortless spending clarity for E-Wallets, Google Pay, cards, SMS alerts, and daily cash.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        HorizontalDivider(color = extraColors.hairlineBorder, thickness = 0.9.dp)
+                        EditorialNumberedItem(
+                            index = "02",
+                            title = "Daily spending rhythm",
+                            subtitle = "Live Safe-to-Spend allowance per day, no-spend streaks, and month-end savings trajectory."
                         )
+                        HorizontalDivider(color = extraColors.hairlineBorder, thickness = 0.9.dp)
+                        EditorialNumberedItem(
+                            index = "03",
+                            title = "Private cloud ledger",
+                            subtitle = "Backed by your personal Google account with instant category breakdowns."
+                        )
+                        HorizontalDivider(color = extraColors.hairlineBorder, thickness = 0.9.dp)
                     }
                 }
 
-                CrispCard(
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (!errorMessage.isNullOrBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = errorMessage.orEmpty(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(14.dp)
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            autoSignInJob?.cancel()
+                            autoSignInJob = null
+                            errorMessage = null
+                            isLoading = true
+                            onGoogleSignInClicked(
+                                context = context,
+                                credentialManager = credentialManager,
+                                onAuthSuccess = {
+                                    isLoading = false
+                                    onAuthSuccess()
+                                },
+                                onAuthError = { msg ->
+                                    isLoading = false
+                                    errorMessage = msg
+                                },
+                                scope = scope,
+                                onAuthCancelled = {
+                                    isLoading = false
+                                }
+                            )
+                        },
+                        enabled = !isLoading,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .testTag("sign_in_google_button")
                     ) {
-                        FeatureRow(
-                            icon = Icons.Rounded.NotificationsActive,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            title = "Instant payment capture",
-                            subtitle = "Detects E-Wallet, Google Pay, card, and SMS purchase alerts with swipe-to-confirm review."
-                        )
-                        FeatureRow(
-                            icon = Icons.AutoMirrored.Rounded.ShowChart,
-                            iconTint = extraColors.cobaltAccent,
-                            title = "Safe-to-Spend clarity",
-                            subtitle = "Live daily allowance, no-spend streak tracking, interactive reports, and savings trajectory."
-                        )
-                    }
-                }
-
-                if (!errorMessage.isNullOrBlank()) {
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = errorMessage.orEmpty(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(14.dp)
-                        )
-                    }
-                }
-
-                Button(
-                    onClick = {
-                        autoSignInJob?.cancel()
-                        autoSignInJob = null
-                        errorMessage = null
-                        isLoading = true
-                        onGoogleSignInClicked(
-                            context = context,
-                            credentialManager = credentialManager,
-                            onAuthSuccess = {
-                                isLoading = false
-                                onAuthSuccess()
-                            },
-                            onAuthError = { msg ->
-                                isLoading = false
-                                errorMessage = msg
-                            },
-                            scope = scope,
-                            onAuthCancelled = {
-                                isLoading = false
-                            }
-                        )
-                    },
-                    enabled = !isLoading,
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = extraColors.contrastPillBg,
-                        contentColor = extraColors.contrastPillText
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .testTag("sign_in_google_button")
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(22.dp),
-                            color = extraColors.contrastPillText,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.sign_in_with_google),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.sign_in_with_google),
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
                     }
                 }
             }
@@ -276,35 +276,32 @@ fun AuthScreen(
 }
 
 @Composable
-private fun FeatureRow(
-    icon: ImageVector,
-    iconTint: Color,
+private fun EditorialNumberedItem(
+    index: String,
     title: String,
     subtitle: String
 ) {
     Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 14.dp),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = iconTint.copy(alpha = 0.14f),
-            modifier = Modifier.size(42.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(21.dp)
-                )
-            }
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            text = index,
+            style = MonoCodeStyle.copy(
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.padding(top = 2.dp)
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = subtitle,

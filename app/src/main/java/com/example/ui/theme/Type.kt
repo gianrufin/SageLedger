@@ -30,7 +30,7 @@ val JetBrainsMonoFamily = FontFamily(
 
 val TabularAmountStyle = TextStyle(
     fontFamily = OutfitFamily,
-    fontWeight = FontWeight.ExtraBold,
+    fontWeight = FontWeight.Bold,
     fontFeatureSettings = "tnum"
 )
 
@@ -44,30 +44,30 @@ val SageTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = OutfitFamily,
         fontWeight = FontWeight.ExtraBold,
-        fontSize = 48.sp,
-        lineHeight = 52.sp,
-        letterSpacing = (-1.4).sp
+        fontSize = 52.sp,
+        lineHeight = 56.sp,
+        letterSpacing = (-1.8).sp
     ),
     displaySmall = TextStyle(
         fontFamily = OutfitFamily,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 36.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 38.sp,
         lineHeight = 42.sp,
-        letterSpacing = (-0.9).sp
+        letterSpacing = (-1.1).sp
     ),
     headlineMedium = TextStyle(
         fontFamily = OutfitFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
+        fontSize = 32.sp,
         lineHeight = 36.sp,
-        letterSpacing = (-0.7).sp
+        letterSpacing = (-0.8).sp
     ),
     headlineSmall = TextStyle(
         fontFamily = OutfitFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
-        lineHeight = 30.sp,
-        letterSpacing = (-0.4).sp
+        lineHeight = 29.sp,
+        letterSpacing = (-0.5).sp
     ),
     titleLarge = TextStyle(
         fontFamily = OutfitFamily,
@@ -114,15 +114,17 @@ val SageTypography = Typography(
         lineHeight = 18.sp
     ),
     labelMedium = TextStyle(
-        fontFamily = InterFamily,
-        fontWeight = FontWeight.SemiBold,
+        fontFamily = JetBrainsMonoFamily,
+        fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
-        lineHeight = 15.sp
+        lineHeight = 15.sp,
+        letterSpacing = 0.2.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = InterFamily,
-        fontWeight = FontWeight.SemiBold,
+        fontFamily = JetBrainsMonoFamily,
+        fontWeight = FontWeight.Medium,
         fontSize = 10.sp,
-        lineHeight = 14.sp
+        lineHeight = 14.sp,
+        letterSpacing = 0.3.sp
     )
 )

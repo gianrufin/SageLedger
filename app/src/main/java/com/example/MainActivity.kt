@@ -526,7 +526,7 @@ private fun AuthenticatedLedgerShell(
                     }
 
                     if (!useNavRail) {
-                        PlayfulDockedBottomBar(
+                        EditorialBottomNavigationDock(
                             items = navItems,
                             currentRoute = currentRoute,
                             onSelectRoute = navigateToTab,
@@ -583,7 +583,7 @@ private fun AuthenticatedLedgerShell(
 }
 
 @Composable
-private fun PlayfulDockedBottomBar(
+private fun EditorialBottomNavigationDock(
     items: List<NavDestinationItem>,
     currentRoute: String,
     onSelectRoute: (String) -> Unit,
@@ -591,73 +591,60 @@ private fun PlayfulDockedBottomBar(
     modifier: Modifier = Modifier
 ) {
     val extraColors = LocalLedgerExtraColors.current
-    val leftItems = items.take(2)
-    val rightItems = items.drop(2)
 
-    Box(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.BottomCenter
+        horizontalAlignment = Alignment.End
     ) {
-        Surface(
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, extraColors.hairlineBorder),
-            shadowElevation = 10.dp,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                leftItems.forEach { item ->
-                    DockedNavTab(
-                        item = item,
-                        selected = currentRoute == item.route,
-                        onClick = { onSelectRoute(item.route) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                // Space reserved under the centered raised + button
-                Spacer(modifier = Modifier.width(68.dp))
-
-                rightItems.forEach { item ->
-                    DockedNavTab(
-                        item = item,
-                        selected = currentRoute == item.route,
-                        onClick = { onSelectRoute(item.route) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
-        // Raised centered circular + button sitting proud above the dock
         FloatingActionButton(
             onClick = onAddClick,
-            shape = CircleShape,
+            shape = RoundedCornerShape(18.dp),
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 6.dp,
-                pressedElevation = 10.dp
+                defaultElevation = 4.dp,
+                pressedElevation = 8.dp
             ),
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = (-20).dp)
-                .size(58.dp)
+                .padding(end = 16.dp, bottom = 14.dp)
+                .size(56.dp)
                 .springPressScale()
                 .testTag("fab_add_expense")
         ) {
             Icon(
                 imageVector = Icons.Rounded.Add,
                 contentDescription = "Record purchase or cash spend",
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(26.dp)
             )
+        }
+
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                androidx.compose.material3.HorizontalDivider(
+                    thickness = 0.8.dp,
+                    color = extraColors.hairlineBorder
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    items.forEach { item ->
+                        DockedNavTab(
+                            item = item,
+                            selected = currentRoute == item.route,
+                            onClick = { onSelectRoute(item.route) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -671,7 +658,7 @@ private fun DockedNavTab(
 ) {
     val label = stringResource(item.labelRes)
     val contentColor = if (selected) {
-        MaterialTheme.colorScheme.onSurface
+        MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }

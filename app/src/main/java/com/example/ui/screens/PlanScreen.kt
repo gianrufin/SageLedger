@@ -26,9 +26,12 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Savings
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +40,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +66,7 @@ import com.example.ui.components.SplitCurrencyText
 import com.example.ui.components.icon
 import com.example.ui.components.springPressScale
 import com.example.ui.theme.LocalLedgerExtraColors
+import com.example.ui.theme.MonoCodeStyle
 import com.example.ui.theme.TabularAmountStyle
 import com.example.ui.viewmodel.DashboardSnapshot
 import com.example.ui.viewmodel.UiState
@@ -169,7 +174,9 @@ fun PlanScreen(
                 ) {
                     item(key = "plan_header") {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -180,42 +187,42 @@ fun PlanScreen(
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Text(
-                                    text = "Savings pace & category limits",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    text = "SAVINGS PACE & CATEGORY LIMITS",
+                                    style = MonoCodeStyle.copy(fontSize = 10.5.sp, letterSpacing = 0.7.sp),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Surface(
                                     onClick = onOpenSettings,
-                                    shape = CircleShape,
+                                    shape = RoundedCornerShape(10.dp),
                                     color = MaterialTheme.colorScheme.surface,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, extraColors.hairlineBorder),
-                                    modifier = Modifier.size(44.dp)
+                                    border = BorderStroke(0.9.dp, extraColors.hairlineBorder),
+                                    modifier = Modifier.size(42.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.Tune,
                                             contentDescription = "Edit monthly income & budget",
                                             tint = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(19.dp)
                                         )
                                     }
                                 }
                                 Surface(
                                     onClick = onAddPresetClicked,
-                                    shape = CircleShape,
-                                    color = extraColors.contrastPillBg,
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier
-                                        .size(44.dp)
+                                        .size(42.dp)
                                         .springPressScale()
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.Add,
                                             contentDescription = "Add recurring shortcut",
-                                            tint = extraColors.contrastPillText,
-                                            modifier = Modifier.size(22.dp)
+                                            tint = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.size(21.dp)
                                         )
                                     }
                                 }
@@ -231,7 +238,7 @@ fun PlanScreen(
                         val barColor = if (isOnTrack) extraColors.positiveGreen else extraColors.expenseCoral
 
                         CrispCard(
-                            shape = RoundedCornerShape(24.dp),
+                            shape = RoundedCornerShape(18.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(
@@ -369,95 +376,111 @@ fun PlanScreen(
 
                     item(key = "budgets_section_header") {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Category Budgets",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onBackground
+                                text = "CATEGORY BUDGETS",
+                                style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.7.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Tap card to edit limit",
-                                style = MaterialTheme.typography.labelMedium,
+                                text = "Tap row to edit limit",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    items(sortedCategories, key = { "budget_${it.name}" }) { cat ->
-                        val limit = budgetMap[cat]?.monthlyLimitCents ?: cat.defaultBudgetCents
-                        val spent = spentByCat[cat] ?: 0L
-                        val pct = if (limit > 0L) ((spent.toDouble() / limit.toDouble()) * 100.0).roundToInt() else 0
-                        val ringColor = if (pct > 100) extraColors.expenseCoral else cat.chartColor
-
+                    item(key = "unified_budgets_sheet") {
                         CrispCard(
-                            onClick = { editingBudgetCategory = cat },
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(18.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .springPressScale(0.985f)
-                                .testTag("plan_budget_${cat.name.lowercase()}")
+                                .clip(RoundedCornerShape(18.dp))
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = cat.chartColor.copy(alpha = 0.14f),
-                                    modifier = Modifier.size(46.dp)
+                            sortedCategories.forEachIndexed { idx, cat ->
+                                val limit = budgetMap[cat]?.monthlyLimitCents ?: cat.defaultBudgetCents
+                                val spent = spentByCat[cat] ?: 0L
+                                val pct = if (limit > 0L) ((spent.toDouble() / limit.toDouble()) * 100.0).roundToInt() else 0
+                                val ringColor = if (pct > 100) extraColors.expenseCoral else cat.chartColor
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { editingBudgetCategory = cat }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                        .testTag("plan_budget_${cat.name.lowercase()}"),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = cat.icon(),
-                                            contentDescription = cat.displayName,
-                                            tint = cat.chartColor,
-                                            modifier = Modifier.size(22.dp)
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                                        border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = cat.icon(),
+                                                contentDescription = cat.displayName,
+                                                tint = cat.chartColor,
+                                                modifier = Modifier.size(19.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = cat.displayName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = "${CurrencyFormatter.formatCents(spent, currency)} of ${CurrencyFormatter.formatCents(limit, currency)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
-                                }
 
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    Text(
-                                        text = cat.displayName,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = "${CurrencyFormatter.formatCents(spent, currency)} of ${CurrencyFormatter.formatCents(limit, currency)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    CircularPercentRing(
+                                        percentage = pct,
+                                        ringColor = ringColor,
+                                        size = 44.dp
                                     )
                                 }
 
-                                CircularPercentRing(
-                                    percentage = pct,
-                                    ringColor = ringColor
-                                )
+                                if (idx < sortedCategories.lastIndex) {
+                                    HorizontalDivider(
+                                        thickness = 0.75.dp,
+                                        color = extraColors.hairlineBorder,
+                                        modifier = Modifier.padding(start = 68.dp, end = 16.dp)
+                                    )
+                                }
                             }
                         }
                     }
 
                     item(key = "presets_header") {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Quick-Add Shortcuts",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onBackground
+                                text = "QUICK-ADD SHORTCUTS",
+                                style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.7.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             TextButton(onClick = onAddPresetClicked) {
                                 Text("Add shortcut")
@@ -468,7 +491,7 @@ fun PlanScreen(
                     if (data.recurringPresets.isEmpty()) {
                         item(key = "empty_presets") {
                             CrispCard(
-                                shape = RoundedCornerShape(20.dp),
+                                shape = RoundedCornerShape(18.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
@@ -491,52 +514,62 @@ fun PlanScreen(
                             }
                         }
                     } else {
-                        items(data.recurringPresets, key = { "preset_${it.id}" }) { preset ->
+                        item(key = "unified_presets_sheet") {
                             CrispCard(
-                                onClick = { onQuickAddPreset(preset) },
-                                shape = RoundedCornerShape(20.dp),
+                                shape = RoundedCornerShape(18.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .springPressScale(0.985f)
+                                    .clip(RoundedCornerShape(18.dp))
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Surface(
-                                        shape = RoundedCornerShape(14.dp),
-                                        color = preset.categoryEnum.chartColor.copy(alpha = 0.14f),
-                                        modifier = Modifier.size(42.dp)
+                                data.recurringPresets.forEachIndexed { idx, preset ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { onQuickAddPreset(preset) }
+                                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
+                                        Surface(
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                                            border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                                            modifier = Modifier.size(38.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = preset.categoryEnum.icon(),
+                                                    contentDescription = preset.categoryEnum.displayName,
+                                                    tint = preset.categoryEnum.chartColor,
+                                                    modifier = Modifier.size(19.dp)
+                                                )
+                                            }
+                                        }
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = preset.label,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "${preset.merchant} · ${CurrencyFormatter.formatCents(preset.amountCents, currency)}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        IconButton(onClick = { onDeletePreset(preset.id) }) {
                                             Icon(
-                                                imageVector = preset.categoryEnum.icon(),
-                                                contentDescription = preset.categoryEnum.displayName,
-                                                tint = preset.categoryEnum.chartColor,
-                                                modifier = Modifier.size(20.dp)
+                                                imageVector = Icons.Rounded.DeleteOutline,
+                                                contentDescription = "Delete preset",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = preset.label,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = "${preset.merchant} • Tap to log ${CurrencyFormatter.formatCents(preset.amountCents, currency)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    IconButton(onClick = { onDeletePreset(preset.id) }) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.DeleteOutline,
-                                            contentDescription = "Delete preset",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    if (idx < data.recurringPresets.lastIndex) {
+                                        HorizontalDivider(
+                                            thickness = 0.75.dp,
+                                            color = extraColors.hairlineBorder,
+                                            modifier = Modifier.padding(start = 66.dp, end = 16.dp)
                                         )
                                     }
                                 }
@@ -545,7 +578,7 @@ fun PlanScreen(
                     }
 
                     item(key = "plan_bottom_spacer") {
-                        Spacer(modifier = Modifier.height(104.dp))
+                        Spacer(modifier = Modifier.height(132.dp))
                     }
                 }
             }

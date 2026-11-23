@@ -164,21 +164,22 @@ fun AccountProfileSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Surface(
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(12.dp),
                     color = MaterialTheme.colorScheme.surfaceContainer,
+                    border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            .padding(3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         ThemeModePreference.entries.forEach { mode ->
                             val selected = themeMode == mode
                             Surface(
                                 onClick = { onSetThemeMode(mode) },
-                                shape = RoundedCornerShape(50),
+                                shape = RoundedCornerShape(9.dp),
                                 color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
                                 shadowElevation = if (selected) 1.dp else 0.dp,
                                 modifier = Modifier.weight(1f)
@@ -248,7 +249,7 @@ fun AccountProfileSheet(
                         onDismiss()
                         onSignOut()
                     },
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, extraColors.expenseCoral.copy(alpha = 0.4f)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = extraColors.expenseCoral),
                     modifier = Modifier

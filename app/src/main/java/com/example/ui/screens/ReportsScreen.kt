@@ -41,6 +41,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,8 +67,8 @@ import com.example.ui.components.CrispCard
 import com.example.ui.components.SpendingTrendBarChart
 import com.example.ui.components.SplitCurrencyText
 import com.example.ui.components.icon
-import com.example.ui.components.springPressScale
 import com.example.ui.theme.LocalLedgerExtraColors
+import com.example.ui.theme.MonoCodeStyle
 import com.example.ui.theme.TabularAmountStyle
 import com.example.ui.viewmodel.UiState
 import kotlin.math.roundToInt
@@ -139,11 +143,11 @@ fun ReportsScreen(
                 .widthIn(max = 760.dp)
                 .statusBarsPadding()
         ) {
-            // Mockup-style top bar: "Report" + active period pill
+            // Editorial top bar: "Report" + clean date range control
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -155,12 +159,12 @@ fun ReportsScreen(
                 val periodTitle = (state as? UiState.Success)?.data?.periodLabel ?: selectedPeriod.label
                 CrispCard(
                     onClick = { showDateRangeDialog = true },
-                    shape = RoundedCornerShape(50)
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.CalendarMonth,
@@ -179,10 +183,11 @@ fun ReportsScreen(
                 }
             }
 
-            // Segmented capsule switcher ("Expenses" vs "Channels & Top")
+            // Sleek architectural segment switcher ("Expenses" vs "Channels & Top")
             Surface(
-                shape = RoundedCornerShape(50),
+                shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
+                border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -190,20 +195,20 @@ fun ReportsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     ReportSectionTab.entries.forEach { tab ->
                         val isSelected = activeTab == tab
                         Surface(
                             onClick = { activeTab = tab },
-                            shape = RoundedCornerShape(50),
+                            shape = RoundedCornerShape(9.dp),
                             color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
                             shadowElevation = if (isSelected) 1.dp else 0.dp,
                             modifier = Modifier.weight(1f)
                         ) {
                             Box(
-                                modifier = Modifier.padding(vertical = 10.dp),
+                                modifier = Modifier.padding(vertical = 9.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -221,18 +226,18 @@ fun ReportsScreen(
                 }
             }
 
-            // Period filter chips row (Day / Week / Month / Year / Period)
+            // Period filter tabs (Day / Week / Month / Year / Period)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 ReportPeriod.entries.forEach { period ->
                     val tag = "filter_${period.name.lowercase()}"
-                    FilterChip(
-                        selected = selectedPeriod == period,
+                    val selected = selectedPeriod == period
+                    Surface(
                         onClick = {
                             selectedCategoryIdx = null
                             if (period == ReportPeriod.CUSTOM) {
@@ -241,9 +246,28 @@ fun ReportsScreen(
                                 onSelectPeriod(period)
                             }
                         },
-                        label = { Text(period.label) },
-                        modifier = Modifier.testTag(tag)
-                    )
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        border = if (selected) null else BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                        modifier = Modifier
+                            .defaultMinSize(minHeight = 36.dp)
+                            .testTag(tag)
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = period.label,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (selected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -279,14 +303,14 @@ fun ReportsScreen(
                             start = 16.dp,
                             end = 16.dp,
                             top = 4.dp,
-                            bottom = 112.dp
+                            bottom = 148.dp
                         ),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         if (activeTab == ReportSectionTab.EXPENSES) {
                             item(key = "expenses_chart_card") {
                                 CrispCard(
-                                    shape = RoundedCornerShape(24.dp),
+                                    shape = RoundedCornerShape(18.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(
@@ -409,61 +433,61 @@ fun ReportsScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 4.dp),
+                                        .padding(horizontal = 4.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "All Expenses",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        text = "ALL CATEGORIES",
+                                        style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.7.sp),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                    Row(
-                                        verticalAlignment = Alignment.Bottom,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Text(
-                                            text = "Total",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        SplitCurrencyText(
-                                            amountCents = report.totalSpentCents,
-                                            currencyCode = currencyCode,
-                                            style = TabularAmountStyle.copy(fontSize = 15.sp),
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-                                    }
+                                    SplitCurrencyText(
+                                        amountCents = report.totalSpentCents,
+                                        currencyCode = currencyCode,
+                                        style = TabularAmountStyle.copy(fontSize = 15.sp),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
                                 }
                             }
 
                             if (report.categoryBreakdown.isEmpty()) {
                                 item(key = "empty_categories") {
-                                    CrispCard(modifier = Modifier.fillMaxWidth()) {
+                                    CrispCard(
+                                        shape = RoundedCornerShape(18.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
                                         Box(modifier = Modifier.padding(18.dp)) {
                                             EmptyChartPlaceholder()
                                         }
                                     }
                                 }
                             } else {
-                                itemsIndexed(
-                                    items = report.categoryBreakdown,
-                                    key = { _, item -> "cat_${item.category.name}" }
-                                ) { _, item ->
-                                    val nonZeroIdx = nonZeroCategories.indexOfFirst { it.category == item.category }
-                                    val isHighlighted = selectedCategoryIdx != null && nonZeroIdx == selectedCategoryIdx
-                                    CategoryBreakdownCard(
-                                        item = item,
-                                        currencyCode = currencyCode,
-                                        showBudgetRatio = selectedPeriod == ReportPeriod.MONTH,
-                                        highlighted = isHighlighted,
-                                        onClick = {
-                                            if (nonZeroIdx >= 0) {
-                                                selectedCategoryIdx =
-                                                    if (selectedCategoryIdx == nonZeroIdx) null else nonZeroIdx
-                                            }
+                                item(key = "unified_categories_sheet") {
+                                    CrispCard(
+                                        shape = RoundedCornerShape(18.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(18.dp))
+                                    ) {
+                                        report.categoryBreakdown.forEachIndexed { idx, item ->
+                                            val nonZeroIdx = nonZeroCategories.indexOfFirst { it.category == item.category }
+                                            val isHighlighted = selectedCategoryIdx != null && nonZeroIdx == selectedCategoryIdx
+                                            CategoryBreakdownRow(
+                                                item = item,
+                                                currencyCode = currencyCode,
+                                                showBudgetRatio = selectedPeriod == ReportPeriod.MONTH,
+                                                highlighted = isHighlighted,
+                                                showDivider = idx < report.categoryBreakdown.lastIndex,
+                                                onClick = {
+                                                    if (nonZeroIdx >= 0) {
+                                                        selectedCategoryIdx =
+                                                            if (selectedCategoryIdx == nonZeroIdx) null else nonZeroIdx
+                                                    }
+                                                }
+                                            )
                                         }
-                                    )
+                                    }
                                 }
                             }
                         } else {
@@ -638,11 +662,12 @@ fun ReportsScreen(
 }
 
 @Composable
-private fun CategoryBreakdownCard(
+private fun CategoryBreakdownRow(
     item: CategoryBreakdownItem,
     currencyCode: String,
     showBudgetRatio: Boolean,
     highlighted: Boolean,
+    showDivider: Boolean,
     onClick: () -> Unit
 ) {
     val extraColors = LocalLedgerExtraColors.current
@@ -659,18 +684,17 @@ private fun CategoryBreakdownCard(
     val isOver = showBudgetRatio && item.budgetCents > 0L && item.spentCents > item.budgetCents
     val sharePct = (item.shareFraction * 100f).roundToInt()
 
-    CrispCard(
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        borderColor = if (highlighted) item.category.chartColor else extraColors.hairlineBorder,
-        borderWidth = if (highlighted) 1.5.dp else 1.dp,
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .springPressScale(0.985f)
+            .background(
+                if (highlighted) item.category.chartColor.copy(alpha = 0.08f) else Color.Transparent
+            )
+            .clickable(onClick = onClick)
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -678,16 +702,17 @@ private fun CategoryBreakdownCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = item.category.chartColor.copy(alpha = 0.14f),
-                    modifier = Modifier.size(44.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(0.8.dp, extraColors.hairlineBorder),
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = item.category.icon(),
                             contentDescription = item.category.displayName,
                             tint = item.category.chartColor,
-                            modifier = Modifier.size(21.dp)
+                            modifier = Modifier.size(19.dp)
                         )
                     }
                 }
@@ -702,7 +727,7 @@ private fun CategoryBreakdownCard(
                     )
                     Text(
                         text = "${sharePct}% of total",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MonoCodeStyle.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -716,38 +741,13 @@ private fun CategoryBreakdownCard(
                     )
                     if (showBudgetRatio && item.budgetCents > 0L) {
                         val budgetPct = ((item.spentCents.toDouble() / item.budgetCents.toDouble()) * 100.0).roundToInt()
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (isOver) {
-                                    MaterialTheme.colorScheme.errorContainer
-                                } else {
-                                    extraColors.positiveGreenContainer
-                                }
-                            ) {
-                                Text(
-                                    text = "${budgetPct}%",
-                                    style = TabularAmountStyle.copy(
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isOver) {
-                                            MaterialTheme.colorScheme.onErrorContainer
-                                        } else {
-                                            extraColors.onPositiveGreenContainer
-                                        }
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                            Text(
-                                text = "of limit",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Text(
+                            text = "${budgetPct}% of limit",
+                            style = MonoCodeStyle.copy(
+                                fontSize = 10.5.sp,
+                                color = if (isOver) extraColors.expenseCoral else extraColors.positiveGreen
                             )
-                        }
+                        )
                     }
                 }
             }
@@ -758,8 +758,16 @@ private fun CategoryBreakdownCard(
                 trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(7.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(3.dp))
+            )
+        }
+
+        if (showDivider) {
+            HorizontalDivider(
+                thickness = 0.75.dp,
+                color = extraColors.hairlineBorder,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
     }

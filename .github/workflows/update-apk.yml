@@ -72,7 +72,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VER_NAME="${GITHUB_REF#refs/tags/v}"
           else
-            VER_NAME="1.0.$((GITHUB_RUN_NUMBER + 12))"
+            VER_NAME="1.0.$((GITHUB_RUN_NUMBER + 13))"
           fi
           VER_CODE=$((GITHUB_RUN_NUMBER + 20))
           echo "version_name=$VER_NAME" >> "$GITHUB_OUTPUT"

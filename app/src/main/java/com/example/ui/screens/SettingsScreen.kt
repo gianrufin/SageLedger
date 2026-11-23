@@ -62,9 +62,11 @@ import com.example.BuildConfig
 import com.example.core.CurrencyFormatter
 import com.example.data.model.SpendingCategory
 import com.example.data.model.ThemeModePreference
+import androidx.compose.ui.unit.sp
 import com.example.notifications.SpendingAlertNotifier
 import com.example.notifications.TransactionNotificationListenerService
 import com.example.ui.components.CrispCard
+import com.example.ui.theme.MonoCodeStyle
 import com.example.ui.viewmodel.DashboardSnapshot
 import com.example.ui.viewmodel.UiState
 import com.google.firebase.Firebase
@@ -599,7 +601,7 @@ fun SettingsScreen(
             }
 
             item(key = "settings_bottom_spacer") {
-                Spacer(modifier = Modifier.height(104.dp))
+                Spacer(modifier = Modifier.height(132.dp))
             }
         }
     }
@@ -610,20 +612,23 @@ private fun SectionCard(
     title: String,
     content: @Composable () -> Unit
 ) {
-    CrispCard(
-        shape = RoundedCornerShape(22.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = title.uppercase(java.util.Locale.getDefault()),
+            style = MonoCodeStyle.copy(fontSize = 11.sp, letterSpacing = 0.7.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        CrispCard(
+            shape = RoundedCornerShape(18.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            content()
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                content()
+            }
         }
     }
 }
