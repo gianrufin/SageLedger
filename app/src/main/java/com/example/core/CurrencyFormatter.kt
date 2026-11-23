@@ -20,7 +20,7 @@ import java.util.Locale
 import kotlin.math.roundToLong
 
 object CurrencyFormatter {
-    val supportedCurrencies = listOf("USD", "PHP", "EUR", "GBP", "JPY", "SGD", "AUD", "CAD")
+    val supportedCurrencies = listOf("PHP", "USD", "EUR", "GBP", "JPY", "SGD", "AUD", "CAD")
 
     fun symbolFor(currencyCode: String): String {
         return when (currencyCode.uppercase(Locale.US)) {
@@ -36,7 +36,7 @@ object CurrencyFormatter {
         }
     }
 
-    fun formatCents(amountCents: Long, currencyCode: String = "USD", showPlusSign: Boolean = false): String {
+    fun formatCents(amountCents: Long, currencyCode: String = "PHP", showPlusSign: Boolean = false): String {
         val code = currencyCode.uppercase(Locale.US)
         val isZeroDecimal = code == "JPY"
         val major = if (isZeroDecimal) amountCents.toDouble() / 100.0 else amountCents.toDouble() / 100.0
@@ -54,7 +54,7 @@ object CurrencyFormatter {
         }
     }
 
-    fun formatCompactCents(amountCents: Long, currencyCode: String = "USD"): String {
+    fun formatCompactCents(amountCents: Long, currencyCode: String = "PHP"): String {
         val sym = symbolFor(currencyCode)
         val absMajor = kotlin.math.abs(amountCents) / 100.0
         val prefix = if (amountCents < 0) "-" else ""

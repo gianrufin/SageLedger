@@ -206,7 +206,7 @@ fun AuthScreen(
                     // Bold Display Headline
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Every dollar, mapped live.",
+                            text = "Every peso, mapped live.",
                             style = MaterialTheme.typography.displayLarge.copy(
                                 fontSize = 42.sp,
                                 lineHeight = 46.sp,

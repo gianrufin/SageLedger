@@ -166,7 +166,7 @@ data class UserFinanceSettings(
     val userId: String = "",
     val monthlyIncomeCents: Long = 400_000L,
     val monthlyBudgetCents: Long = 240_000L,
-    val currencyCode: String = "USD",
+    val currencyCode: String = "PHP",
     val githubRepo: String = "",
     @ServerTimestamp val createdAt: Timestamp? = null,
     @ServerTimestamp val updatedAt: Timestamp? = null

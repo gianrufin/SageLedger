@@ -159,12 +159,12 @@ class LedgerRepository(
                 .collection("settings").document("preferences")
                 .get()
                 .await()
-            snap.getString("currencyCode") ?: "USD"
+            snap.getString("currencyCode") ?: "PHP"
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             handleFirestoreError(e, OperationType.GET, path)
-            "USD"
+            "PHP"
         }
     }
 
@@ -180,7 +180,7 @@ class LedgerRepository(
                     "userId" to uid,
                     "monthlyIncomeCents" to 400_000L,
                     "monthlyBudgetCents" to 240_000L,
-                    "currencyCode" to "USD",
+                    "currencyCode" to "PHP",
                     "githubRepo" to "",
                     "createdAt" to FieldValue.serverTimestamp(),
                     "updatedAt" to FieldValue.serverTimestamp()
@@ -471,10 +471,10 @@ class LedgerRepository(
             val uid = requireActiveUid(userId)
             val safeIncome = monthlyIncomeCents.coerceIn(0L, 10_000_000_000L)
             val safeBudget = monthlyBudgetCents.coerceIn(0L, 10_000_000_000L)
-            val safeCurrency = if (currencyCode in listOf("USD", "PHP", "EUR", "GBP", "JPY", "SGD", "AUD", "CAD")) {
+            val safeCurrency = if (currencyCode in listOf("PHP", "USD", "EUR", "GBP", "JPY", "SGD", "AUD", "CAD")) {
                 currencyCode
             } else {
-                "USD"
+                "PHP"
             }
             val safeRepo = githubRepo.trim().take(120)
 

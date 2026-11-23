@@ -164,7 +164,7 @@ fun ManualEntrySheet(
                         value = smsPasteInput,
                         onValueChange = { smsPasteInput = it },
                         label = { Text("Bank, E-Wallet, or SMS text") },
-                        placeholder = { Text("e.g. Paid \$14.80 via GCash at 7-Eleven") },
+                        placeholder = { Text("e.g. Paid ₱245.00 via GCash at 7-Eleven") },
                         minLines = 2,
                         maxLines = 4,
                         modifier = Modifier
@@ -219,7 +219,7 @@ fun ManualEntrySheet(
                 value = merchant,
                 onValueChange = { merchant = it },
                 label = { Text("Store or merchant") },
-                placeholder = { Text("e.g. Starbucks, Shell, 7-Eleven, Best Buy") },
+                placeholder = { Text("e.g. Jollibee, Starbucks, Shell, 7-Eleven") },
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 trailingIcon = {
                     if (merchant.isNotBlank()) {

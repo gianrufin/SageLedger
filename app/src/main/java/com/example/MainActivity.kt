@@ -314,7 +314,7 @@ private fun AuthenticatedLedgerShell(
     var showAddPresetDialog by remember { mutableStateOf(false) }
 
     val dashboardData = (dashboardState as? com.example.ui.viewmodel.UiState.Success)?.data
-    val currencyCode = dashboardData?.settings?.currencyCode ?: "USD"
+    val currencyCode = dashboardData?.settings?.currencyCode ?: "PHP"
     val monthlyBudgetCents = dashboardData?.settings?.monthlyBudgetCents ?: 0L
     val merchantRules = dashboardData?.merchantRules.orEmpty()
 

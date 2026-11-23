@@ -129,7 +129,7 @@ fun SettingsScreen(
         )
     }
     var selectedCurrency by remember(settings) {
-        mutableStateOf(settings?.currencyCode ?: "USD")
+        mutableStateOf(settings?.currencyCode ?: "PHP")
     }
     var githubRepoInput by remember(settings) {
         mutableStateOf(settings?.githubRepo.orEmpty())
