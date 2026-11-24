@@ -785,6 +785,98 @@ fun HatchedGoalProgressBar(
 }
 
 @Composable
+fun HeroBudgetGaugeRing(
+    percentage: Int,
+    isOverBudget: Boolean,
+    centerLabel: String = "Total Spending",
+    modifier: Modifier = Modifier,
+    size: Dp = 114.dp
+) {
+    val extraColors = LocalLedgerExtraColors.current
+    val clampedSweep = (percentage.coerceIn(0, 100)) / 100f
+    val animFrac by animateFloatAsState(
+        targetValue = clampedSweep,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+        label = "heroGaugeSweep"
+    )
+    val trackColor = extraColors.heroCardTrack
+    val centerInk = extraColors.heroCardInk
+    val centerMuted = extraColors.heroCardMuted
+    val ringColors = if (isOverBudget) {
+        listOf(Color(0xFFF97316), Color(0xFFEF4444), Color(0xFFF97316))
+    } else {
+        listOf(Color(0xFF22C55E), Color(0xFF84CC16), Color(0xFFEAB308), Color(0xFF22C55E))
+    }
+
+    Box(
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val stroke = 11.dp.toPx()
+            val inset = stroke / 2f
+            val arcW = this.size.width - stroke
+            val arcH = this.size.height - stroke
+            if (arcW <= 2f || arcH <= 2f) return@Canvas
+            val arcSize = Size(arcW, arcH)
+
+            drawArc(
+                color = trackColor,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = Offset(inset, inset),
+                size = arcSize,
+                style = Stroke(width = stroke, cap = StrokeCap.Round)
+            )
+
+            if (animFrac > 0.01f) {
+                val center = Offset(this.size.width / 2f, this.size.height / 2f)
+                val sweepBrush = Brush.sweepGradient(colors = ringColors, center = center)
+                drawArc(
+                    brush = sweepBrush,
+                    startAngle = -90f,
+                    sweepAngle = 360f * animFrac,
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = arcSize,
+                    style = Stroke(width = stroke, cap = StrokeCap.Round)
+                )
+
+                val angleRad = ((-90f + 360f * animFrac) * PI / 180.0).toFloat()
+                val r = arcW / 2f
+                val tip = Offset(
+                    x = center.x + r * cos(angleRad),
+                    y = center.y + r * sin(angleRad)
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = 5.5.dp.toPx(),
+                    center = tip
+                )
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = centerLabel,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.5.sp),
+                color = centerMuted,
+                maxLines = 1
+            )
+            Text(
+                text = "${percentage.coerceAtMost(999)}%",
+                style = TabularAmountStyle.copy(
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = centerInk
+                ),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
 fun CircularPercentRing(
     percentage: Int,
     ringColor: Color,

@@ -44,6 +44,7 @@ import androidx.compose.material.icons.rounded.Savings
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
@@ -64,8 +65,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -146,7 +145,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val themeMode by preferencesStore.themeModeFlow.collectAsStateWithLifecycle(
-                initialValue = ThemeModePreference.DARK
+                initialValue = ThemeModePreference.SYSTEM
             )
             val isDark = when (themeMode) {
                 ThemeModePreference.SYSTEM -> isSystemInDarkTheme()
@@ -450,7 +449,7 @@ private fun AuthenticatedLedgerShell(
                 snackbarHost = {
                     SnackbarHost(
                         hostState = snackbarHostState,
-                        modifier = Modifier.padding(bottom = if (useNavRail) 12.dp else 96.dp)
+                        modifier = Modifier.padding(bottom = if (useNavRail) 12.dp else 80.dp)
                     )
                 },
                 contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -549,7 +548,7 @@ private fun AuthenticatedLedgerShell(
                     }
 
                     if (!useNavRail) {
-                        FloatingGlassBottomDock(
+                        CleanDockedBottomBar(
                             items = navItems,
                             currentRoute = currentRoute,
                             onSelectRoute = navigateToTab,
@@ -606,11 +605,10 @@ private fun AuthenticatedLedgerShell(
 }
 
 /**
- * Floating Glass Pill Bottom Bar + Corner `+` Button.
- * Detached frosted dark-glass capsule paired with a dedicated corner emerald `+` action.
+ * Clean 5-slot Docked Bottom Navigation Bar (Home, Reports, centered +, Plan, Settings).
  */
 @Composable
-private fun FloatingGlassBottomDock(
+private fun CleanDockedBottomBar(
     items: List<NavDestinationItem>,
     currentRoute: String,
     onSelectRoute: (String) -> Unit,
@@ -618,83 +616,81 @@ private fun FloatingGlassBottomDock(
     modifier: Modifier = Modifier
 ) {
     val extraColors = LocalLedgerExtraColors.current
-    val bgFadeBrush = remember(extraColors.isDark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.Transparent,
-                if (extraColors.isDark) Color(0xCC080A0F) else Color(0xCCF3F5F9)
-            )
-        )
+    val addBtnBg = if (extraColors.isDark) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        extraColors.contrastPillBg
+    }
+    val addBtnContent = if (extraColors.isDark) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        extraColors.contrastPillText
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(bgFadeBrush)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 6.dp,
+        modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .widthIn(max = 560.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(30.dp),
-                color = extraColors.glassDockBg,
-                border = BorderStroke(1.dp, extraColors.glassDockBorder),
-                shadowElevation = 10.dp,
+        Column(modifier = Modifier.fillMaxWidth()) {
+            HorizontalDivider(thickness = 0.8.dp, color = extraColors.hairlineBorder)
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(62.dp)
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .height(64.dp)
+                    .padding(horizontal = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 6.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                items.take(2).forEach { item ->
+                    DockedNavTab(
+                        item = item,
+                        selected = currentRoute == item.route,
+                        onClick = { onSelectRoute(item.route) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
-                    items.forEach { item ->
-                        FloatingGlassNavTab(
-                            item = item,
-                            selected = currentRoute == item.route,
-                            onClick = { onSelectRoute(item.route) },
-                            modifier = Modifier.weight(1f)
-                        )
+                    Surface(
+                        onClick = onAddClick,
+                        shape = CircleShape,
+                        color = addBtnBg,
+                        shadowElevation = 4.dp,
+                        modifier = Modifier
+                            .size(46.dp)
+                            .springPressScale()
+                            .testTag("fab_add_expense")
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Record purchase or cash spend",
+                                tint = addBtnContent,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            FloatingActionButton(
-                onClick = onAddClick,
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 12.dp
-                ),
-                modifier = Modifier
-                    .size(58.dp)
-                    .springPressScale()
-                    .testTag("fab_add_expense")
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = "Record purchase or cash spend",
-                    modifier = Modifier.size(26.dp)
-                )
+                items.drop(2).forEach { item ->
+                    DockedNavTab(
+                        item = item,
+                        selected = currentRoute == item.route,
+                        onClick = { onSelectRoute(item.route) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun FloatingGlassNavTab(
+private fun DockedNavTab(
     item: NavDestinationItem,
     selected: Boolean,
     onClick: () -> Unit,
@@ -702,27 +698,21 @@ private fun FloatingGlassNavTab(
 ) {
     val label = stringResource(item.labelRes)
     val contentColor = if (selected) {
-        MaterialTheme.colorScheme.primary
+        MaterialTheme.colorScheme.onSurface
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val pillColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-    } else {
-        Color.Transparent
     }
 
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(pillColor)
+            .clip(RoundedCornerShape(14.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 5.dp)
+            .padding(vertical = 6.dp)
             .testTag(item.testTag),
         contentAlignment = Alignment.Center
     ) {
@@ -733,14 +723,14 @@ private fun FloatingGlassNavTab(
             Icon(
                 imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                 contentDescription = label,
-                tint = contentColor,
-                modifier = Modifier.size(20.dp)
+                tint = if (selected) MaterialTheme.colorScheme.primary else contentColor,
+                modifier = Modifier.size(22.dp)
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontFamily = PlusJakartaSansFamily,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                 ),
                 color = contentColor,

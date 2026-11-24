@@ -181,42 +181,14 @@ fun CrispCard(
     shape: Shape = RoundedCornerShape(22.dp),
     containerColor: Color = MaterialTheme.colorScheme.surface,
     borderColor: Color = LocalLedgerExtraColors.current.hairlineBorder,
-    borderWidth: Dp = 1.dp,
+    borderWidth: Dp = 0.8.dp,
     accentGlowColor: Color? = null,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val extraColors = LocalLedgerExtraColors.current
-    val resolvedBorderColor = if (extraColors.isDark && borderColor == extraColors.hairlineBorder) {
-        Color(0x1EFFFFFF)
-    } else {
-        borderColor
-    }
-
-    val glowModifier = if (accentGlowColor != null) {
-        Modifier.drawBehind {
-            val glowRadius = size.maxDimension * 0.65f
-            if (glowRadius > 1f && size.width > 1f && size.height > 1f) {
-                val center = Offset(size.width * 0.92f, size.height * 0.12f)
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            accentGlowColor.copy(alpha = if (extraColors.isDark) 0.16f else 0.08f),
-                            Color.Transparent
-                        ),
-                        center = center,
-                        radius = glowRadius
-                    ),
-                    center = center,
-                    radius = glowRadius
-                )
-            }
-        }
-    } else {
-        Modifier
-    }
-
-    val borderStroke = BorderStroke(borderWidth, resolvedBorderColor)
+    @Suppress("UNUSED_VARIABLE")
+    val ignoredGlow = accentGlowColor
+    val borderStroke = BorderStroke(borderWidth, borderColor)
 
     if (onClick != null) {
         Surface(
@@ -226,10 +198,7 @@ fun CrispCard(
             border = borderStroke,
             modifier = modifier
         ) {
-            Column(
-                modifier = glowModifier,
-                content = content
-            )
+            Column(content = content)
         }
     } else {
         Surface(
@@ -238,10 +207,7 @@ fun CrispCard(
             border = borderStroke,
             modifier = modifier
         ) {
-            Column(
-                modifier = glowModifier,
-                content = content
-            )
+            Column(content = content)
         }
     }
 }

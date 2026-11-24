@@ -2,56 +2,70 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Soft Mint Green Editorial (SumDif Style Mockup Palette)
-val SumDifLightCanvas = Color(0xFFEAF3EE)
-val SumDifLightSurface = Color(0xFFFFFFFF)
-val SumDifLightSurfaceVariant = Color(0xFFE2EFE9)
-val SumDifLightTrack = Color(0xFFCFE4DB)
-val SumDifLightInkPrimary = Color(0xFF0F172A)
-val SumDifLightInkMuted = Color(0xFF64748B)
-val SumDifLightHairline = Color(0xFFD3E7DE)
-val SumDifLightGlassDock = Color(0xEBEAF3EE)
+// Light Mode Palette (Matched to Reference Screenshot: Crisp Porcelain + Charcoal Hero Card)
+val AppLightCanvas = Color(0xFFF5F6F8)
+val AppLightSurface = Color(0xFFFFFFFF)
+val AppLightIconWell = Color(0xFFF1F3F6)
+val AppLightSurfaceTrack = Color(0xFFE5E7EB)
+val AppLightInkPrimary = Color(0xFF111827)
+val AppLightInkMuted = Color(0xFF6B7280)
+val AppLightHairline = Color(0xFFE8EBEF)
+val AppLightButtonBg = Color(0xFF181C20)
 
-val SumDifDarkCanvas = Color(0xFF0E1714)
-val SumDifDarkSurface = Color(0xFF15221E)
-val SumDifDarkSurfaceVariant = Color(0xFF1D2E28)
-val SumDifDarkTrack = Color(0xFF263C34)
-val SumDifDarkHighest = Color(0xFF334E43)
-val SumDifDarkInkPrimary = Color(0xFFF1F5F9)
-val SumDifDarkInkMuted = Color(0xFF94A3B8)
-val SumDifDarkHairline = Color(0x1AFFFFFF)
-val SumDifDarkGlassDock = Color(0xEB15221E)
+// Signature Hero Card Palette (Charcoal Slate from Reference Screenshot)
+val HeroCharcoalBg = Color(0xFF1F2429)
+val HeroCharcoalBgDark = Color(0xFF222830)
+val HeroCharcoalChip = Color(0xFF2D333B)
+val HeroCharcoalBorder = Color(0xFF2E353E)
+val HeroCharcoalTrack = Color(0xFF333942)
+val HeroCharcoalInk = Color(0xFFFFFFFF)
+val HeroCharcoalMuted = Color(0xFF9CA3AF)
 
-val SumDifMintPrimary = Color(0xFF059669)
-val SumDifMintContainer = Color(0xFFD1FAE5)
-val SumDifOnMintContainer = Color(0xFF064E3B)
+// Dark Mode Palette (Consistent Charcoal Companion)
+val AppDarkCanvas = Color(0xFF111315)
+val AppDarkSurface = Color(0xFF1B1F24)
+val AppDarkIconWell = Color(0xFF252A31)
+val AppDarkSurfaceTrack = Color(0xFF2C323B)
+val AppDarkHighest = Color(0xFF363D48)
+val AppDarkInkPrimary = Color(0xFFF9FAFB)
+val AppDarkInkMuted = Color(0xFF9CA3AF)
+val AppDarkHairline = Color(0xFF2A3038)
 
-val SumDifDarkMintPrimary = Color(0xFF34D399)
-val SumDifDarkMintContainer = Color(0xFF0D382B)
-val SumDifDarkOnMintContainer = Color(0xFFB8F7DF)
+// Crisp Semantic Accents
+val EmeraldAccent = Color(0xFF16A34A)
+val EmeraldVibrant = Color(0xFF22C55E)
+val EmeraldContainerLight = Color(0xFFDCFCE7)
+val EmeraldOnContainerLight = Color(0xFF14532D)
 
-val SumDifSkySecondary = Color(0xFF0284C7)
-val SumDifSkyContainer = Color(0xFFE0F2FE)
-val SumDifOnSkyContainer = Color(0xFF0C4A6E)
+val EmeraldContainerDark = Color(0xFF143524)
+val EmeraldOnContainerDark = Color(0xFFBBF7D0)
 
-val SumDifDarkSkySecondary = Color(0xFF38BDF8)
-val SumDifDarkSkyContainer = Color(0xFF0E2B40)
-val SumDifDarkOnSkyContainer = Color(0xFFBAE6FD)
+val SkyCobaltLight = Color(0xFF0284C7)
+val SkyContainerLight = Color(0xFFE0F2FE)
+val SkyOnContainerLight = Color(0xFF0C4A6E)
 
-val SumDifCoralTertiary = Color(0xFFE11D48)
-val SumDifCoralContainer = Color(0xFFFFE4E6)
-val SumDifOnCoralContainer = Color(0xFF881337)
+val SkyCobaltDark = Color(0xFF38BDF8)
+val SkyContainerDark = Color(0xFF112C3F)
+val SkyOnContainerDark = Color(0xFFBAE6FD)
 
-val SumDifDarkCoralTertiary = Color(0xFFFB7185)
-val SumDifDarkCoralContainer = Color(0xFF3D1420)
-val SumDifDarkOnCoralContainer = Color(0xFFFFD6DD)
+val CoralAlertLight = Color(0xFFE11D48)
+val CoralContainerLight = Color(0xFFFFE4E6)
+val CoralOnContainerLight = Color(0xFF881337)
 
-// Luminous Category Spectrum
-val CatFoodColor = Color(0xFFFB923C)        // Warm Tangerine
-val CatGroceriesColor = Color(0xFF38BDF8)   // Sky Cobalt
-val CatTransportColor = Color(0xFF34D399)   // Mint Emerald
-val CatConvenienceColor = Color(0xFF2DD4BF) // Electric Teal
-val CatGadgetsColor = Color(0xFF818CF8)     // Soft Indigo
-val CatUtilitiesColor = Color(0xFFFBBF24)   // Luminous Amber
-val CatShoppingColor = Color(0xFFF472B6)    // Rose Pink
-val CatOtherColor = Color(0xFF94A3B8)       // Cool Slate
+val CoralAlertDark = Color(0xFFFB7185)
+val CoralContainerDark = Color(0xFF3D1722)
+val CoralOnContainerDark = Color(0xFFFFD6DD)
+
+val GaugeEmerald = Color(0xFF22C55E)
+val GaugeLime = Color(0xFF84CC16)
+val GaugeAmber = Color(0xFFEAB308)
+
+// Category Spectrum (Clean editorial tones)
+val CatFoodColor = Color(0xFFF97316)        // Warm Orange
+val CatGroceriesColor = Color(0xFF0EA5E9)   // Crisp Sky
+val CatTransportColor = Color(0xFF22C55E)   // Signal Emerald
+val CatConvenienceColor = Color(0xFF14B8A6) // Clean Teal
+val CatGadgetsColor = Color(0xFF6366F1)     // Slate Indigo
+val CatUtilitiesColor = Color(0xFFEAB308)   // Warm Amber
+val CatShoppingColor = Color(0xFFEC4899)    // Clean Rose
+val CatOtherColor = Color(0xFF64748B)       // Neutral Slate

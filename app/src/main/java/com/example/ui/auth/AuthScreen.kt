@@ -25,10 +25,10 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
-import androidx.compose.material.icons.rounded.AutoGraph
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CloudDone
 import androidx.compose.material3.Button
@@ -47,11 +47,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -66,9 +62,9 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.example.R
-import com.example.ui.components.CrispCard
-import com.example.ui.theme.BentoEyebrowStyle
+import com.example.ui.components.HeroBudgetGaugeRing
 import com.example.ui.theme.LocalLedgerExtraColors
+import com.example.ui.theme.TabularAmountStyle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -81,11 +77,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 
 @Composable
 fun AuthScreen(
@@ -99,9 +93,6 @@ fun AuthScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var visible by remember { mutableStateOf(false) }
     var autoSignInJob by remember { mutableStateOf<Job?>(null) }
-
-    val primaryGlow = MaterialTheme.colorScheme.primary
-    val secondaryGlow = extraColors.cobaltAccent
 
     LaunchedEffect(Unit) {
         visible = true
@@ -118,38 +109,6 @@ fun AuthScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .drawBehind {
-                val r1 = size.maxDimension * 0.6f
-                val r2 = size.maxDimension * 0.45f
-                if (r1 > 1f && size.width > 1f && size.height > 1f) {
-                    val c1 = Offset(size.width * 0.25f, size.height * 0.12f)
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                primaryGlow.copy(alpha = if (extraColors.isDark) 0.18f else 0.10f),
-                                Color.Transparent
-                            ),
-                            center = c1,
-                            radius = r1
-                        ),
-                        center = c1,
-                        radius = r1
-                    )
-                    val c2 = Offset(size.width * 0.85f, size.height * 0.42f)
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                secondaryGlow.copy(alpha = if (extraColors.isDark) 0.12f else 0.06f),
-                                Color.Transparent
-                            ),
-                            center = c2,
-                            radius = r2
-                        ),
-                        center = c2,
-                        radius = r2
-                    )
-                }
-            }
             .windowInsetsPadding(WindowInsets.safeDrawing),
         contentAlignment = Alignment.Center
     ) {
@@ -157,97 +116,178 @@ fun AuthScreen(
             visible = visible,
             enter = fadeIn(spring(stiffness = Spring.StiffnessLow)) +
                 slideInVertically(
-                    initialOffsetY = { it / 14 },
-                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessLow)
+                    initialOffsetY = { it / 18 },
+                    animationSpec = spring(dampingRatio = 0.88f, stiffness = Spring.StiffnessLow)
                 )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .widthIn(max = 520.dp)
-                    .padding(horizontal = 20.dp, vertical = 24.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    // Sleek Brand Lockup
+                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    // Clean Brand Header
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Surface(
                             shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
-                            modifier = Modifier.size(42.dp)
+                            color = extraColors.heroCardBg,
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Rounded.AccountBalanceWallet,
-                                    contentDescription = "SageLedger emblem",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(21.dp)
+                                    contentDescription = "SageLedger logo",
+                                    tint = Color(0xFF4ADE80),
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                         }
                         Column {
                             Text(
                                 text = stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = "SMART SPENDING COCKPIT",
-                                style = BentoEyebrowStyle,
+                                text = "Personal Peso Ledger",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    // Bold Display Headline
+                    // Crisp Headline
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "Every peso, mapped live.",
+                            text = "Every peso,\ntracked clearly.",
                             style = MaterialTheme.typography.displayLarge.copy(
-                                fontSize = 42.sp,
-                                lineHeight = 46.sp,
-                                letterSpacing = (-1.5).sp
+                                fontSize = 38.sp,
+                                lineHeight = 44.sp,
+                                letterSpacing = (-1.2).sp
                             ),
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Capture E-Wallet, Google Pay, card, and SMS alerts effortlessly—paired with a live daily spending sparkline.",
+                            text = "Capture GCash, Maya, Google Wallet, card, and SMS alerts automatically, or add cash purchases in seconds.",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    // Dark Bento Feature Grid
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        BentoCapabilityCard(
-                            icon = Icons.Rounded.Bolt,
-                            accentColor = extraColors.cobaltAccent,
-                            eyebrow = "AUTO CAPTURE",
-                            title = "E-Wallet, GPay, Card & SMS",
-                            subtitle = "Detects GCash, Maya, GrabPay, PayPal, Google Pay & bank alerts with swipe-to-confirm."
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    // Signature Charcoal Card Preview
+                    Surface(
+                        shape = RoundedCornerShape(26.dp),
+                        color = extraColors.heroCardBg,
+                        border = BorderStroke(0.8.dp, extraColors.heroCardBorder),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            BentoCapabilityMiniCard(
-                                icon = Icons.Rounded.AutoGraph,
-                                accentColor = extraColors.positiveGreen,
-                                title = "Live Pace",
-                                subtitle = "Daily safe-to-spend & no-spend streaks",
-                                modifier = Modifier.weight(1f)
-                            )
-                            BentoCapabilityMiniCard(
-                                icon = Icons.Rounded.CloudDone,
-                                accentColor = extraColors.amberAccent,
-                                title = "Private Sync",
-                                subtitle = "Secured to your Google account",
-                                modifier = Modifier.weight(1f)
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = Color.White
+                                    ) {
+                                        Text(
+                                            text = "Live Sync",
+                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                            color = Color(0xFF181C20),
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = "Monthly Spending Pace",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = extraColors.heroCardMuted
+                                    )
+                                    Text(
+                                        text = "GCash · Maya · Wallet",
+                                        style = TabularAmountStyle.copy(
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = extraColors.heroCardInk
+                                        )
+                                    )
+                                }
+
+                                HeroBudgetGaugeRing(
+                                    percentage = 72,
+                                    isOverBudget = false,
+                                    centerLabel = "Budget Pace",
+                                    size = 98.dp
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = extraColors.heroCardChipBg,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Bolt,
+                                            contentDescription = null,
+                                            tint = Color(0xFF4ADE80),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = "Auto capture",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = extraColors.heroCardInk
+                                        )
+                                    }
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = extraColors.heroCardChipBg,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.CloudDone,
+                                            contentDescription = null,
+                                            tint = Color(0xFF60A5FA),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = "Cloud backup",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = extraColors.heroCardInk
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -257,7 +297,7 @@ fun AuthScreen(
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = MaterialTheme.colorScheme.errorContainer,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                            border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
@@ -267,6 +307,17 @@ fun AuthScreen(
                                 modifier = Modifier.padding(14.dp)
                             )
                         }
+                    }
+
+                    val ctaBg = if (extraColors.isDark) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        extraColors.contrastPillBg
+                    }
+                    val ctaContent = if (extraColors.isDark) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        extraColors.contrastPillText
                     }
 
                     Button(
@@ -295,130 +346,48 @@ fun AuthScreen(
                         enabled = !isLoading,
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                            containerColor = ctaBg,
+                            contentColor = ctaContent
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(58.dp)
+                            .height(56.dp)
                             .testTag("sign_in_google_button")
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(22.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = ctaContent,
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(
-                                text = stringResource(R.string.sign_in_with_google),
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = ctaContent.copy(alpha = 0.16f),
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "G",
+                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                            color = ctaContent
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = stringResource(R.string.sign_in_with_google),
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
                         }
                     }
-                }
-            }
-        }
-    }
-}
 
-@Composable
-private fun BentoCapabilityCard(
-    icon: ImageVector,
-    accentColor: Color,
-    eyebrow: String,
-    title: String,
-    subtitle: String
-) {
-    CrispCard(
-        shape = RoundedCornerShape(22.dp),
-        accentGlowColor = accentColor,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = accentColor.copy(alpha = 0.14f),
-                border = BorderStroke(0.8.dp, accentColor.copy(alpha = 0.28f)),
-                modifier = Modifier.size(42.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = eyebrow,
-                    style = BentoEyebrowStyle,
-                    color = accentColor
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BentoCapabilityMiniCard(
-    icon: ImageVector,
-    accentColor: Color,
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier
-) {
-    CrispCard(
-        shape = RoundedCornerShape(22.dp),
-        accentGlowColor = accentColor,
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = accentColor.copy(alpha = 0.14f),
-                border = BorderStroke(0.8.dp, accentColor.copy(alpha = 0.28f)),
-                modifier = Modifier.size(36.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
@@ -431,13 +400,7 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 }
 
 private fun resolveDefaultWebClientId(context: Context): String? {
-    val resId = context.resources.getIdentifier(
-        "default_web_client_id",
-        "string",
-        context.packageName
-    )
-    if (resId == 0) return null
-    return runCatching { context.getString(resId) }
+    return runCatching { context.getString(R.string.default_web_client_id) }
         .getOrNull()
         ?.takeIf { it.isNotBlank() }
 }
@@ -474,14 +437,10 @@ fun attemptAutoSignIn(
             val request = GetCredentialRequest.Builder()
                 .addCredentialOption(googleIdOption)
                 .build()
-            val cred = withTimeout(8_000L) {
-                credentialManager.getCredential(hostContext, request)
-            }.credential
+            val cred = credentialManager.getCredential(hostContext, request).credential
             if (cred is CustomCredential && cred.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val token = GoogleIdTokenCredential.createFrom(cred.data).idToken
-                withTimeout(15_000L) {
-                    Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
-                }
+                Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
                 onAuthSuccess()
             } else {
                 onUnauthenticated()
@@ -520,16 +479,14 @@ fun onGoogleSignInClicked(
     scope.launch {
         var settled = false
         try {
-            val cred = requestGoogleCredentialWithFallback(
+            val cred = requestGoogleCredential(
                 activity = activity,
                 credentialManager = credentialManager,
                 clientId = clientId
             )
             if (cred is CustomCredential && cred.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val token = GoogleIdTokenCredential.createFrom(cred.data).idToken
-                withTimeout(15_000L) {
-                    Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
-                }
+                Firebase.auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
                 settled = true
                 onAuthSuccess()
             } else {
@@ -540,16 +497,16 @@ fun onGoogleSignInClicked(
             Log.w("Auth", "Google Sign-In flow cancelled or dismissed: ${e.message}", e)
             settled = true
             onAuthCancelled()
-        } catch (e: TimeoutCancellationException) {
-            Log.w("Auth", "Google Sign-In timed out waiting for Credential Manager / Firebase", e)
-            settled = true
-            onAuthError("Google Sign-In timed out. Check your internet connection and Google Play Services, then try again.")
         } catch (e: CancellationException) {
             throw e
         } catch (e: GetCredentialException) {
             Log.e("Auth", "Google Sign-In credential error (${e.type}): ${e.message}", e)
             settled = true
-            onAuthError(e.errorMessage?.toString()?.takeIf { it.isNotBlank() } ?: e.localizedMessage ?: "Sign in failed (${e.type})")
+            onAuthError(
+                e.errorMessage?.toString()?.takeIf { it.isNotBlank() }
+                    ?: e.localizedMessage
+                    ?: "Google Sign-In failed (${e.type}). Please try again."
+            )
         } catch (e: Exception) {
             Log.e("Auth", "Google Sign-In failed", e)
             settled = true
@@ -562,7 +519,7 @@ fun onGoogleSignInClicked(
     }
 }
 
-private suspend fun requestGoogleCredentialWithFallback(
+private suspend fun requestGoogleCredential(
     activity: Activity,
     credentialManager: CredentialManager,
     clientId: String
@@ -571,28 +528,20 @@ private suspend fun requestGoogleCredentialWithFallback(
     val request = GetCredentialRequest.Builder()
         .addCredentialOption(signInOption)
         .build()
-    withTimeout(15_000L) {
-        credentialManager.getCredential(activity, request).credential
-    }
+    credentialManager.getCredential(activity, request).credential
 } catch (e: GetCredentialCancellationException) {
     throw e
-} catch (e: Exception) {
-    if (e is TimeoutCancellationException || e is NoCredentialException || e is GetCredentialException) {
-        Log.w("Auth", "Primary Sign-In with Google prompt fell back (${e.javaClass.simpleName}): ${e.message}")
-        val fallbackOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(clientId)
-            .setAutoSelectEnabled(false)
-            .build()
-        val fallbackRequest = GetCredentialRequest.Builder()
-            .addCredentialOption(fallbackOption)
-            .build()
-        withTimeout(20_000L) {
-            credentialManager.getCredential(activity, fallbackRequest).credential
-        }
-    } else {
-        throw e
-    }
+} catch (e: NoCredentialException) {
+    Log.w("Auth", "Sign-In with Google returned NoCredentialException; trying unfiltered Google ID option: ${e.message}")
+    val fallbackOption = GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(false)
+        .setServerClientId(clientId)
+        .setAutoSelectEnabled(false)
+        .build()
+    val fallbackRequest = GetCredentialRequest.Builder()
+        .addCredentialOption(fallbackOption)
+        .build()
+    credentialManager.getCredential(activity, fallbackRequest).credential
 }
 
 fun performSignOut(

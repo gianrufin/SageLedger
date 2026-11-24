@@ -58,7 +58,7 @@ enum class ThemeModePreference(val label: String) {
 
     companion object {
         fun fromRaw(raw: String?): ThemeModePreference =
-            entries.firstOrNull { it.name == raw } ?: DARK
+            entries.firstOrNull { it.name == raw } ?: SYSTEM
     }
 }
 
