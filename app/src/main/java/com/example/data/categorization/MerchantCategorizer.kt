@@ -79,9 +79,6 @@ class MerchantCategorizer {
             val prompt = buildString {
                 append("Classify this purchase merchant into exactly one spending category.\n")
                 append("Merchant: ").append(merchant.trim()).append("\n")
-                if (!rawSnippet.isNullOrBlank()) {
-                    append("Alert context: ").append(rawSnippet.take(200)).append("\n")
-                }
                 append("Categories: ")
                 append("FOOD (restaurants, cafes, fast food, food delivery), ")
                 append("GROCERIES (supermarkets, fresh markets, warehouse clubs), ")

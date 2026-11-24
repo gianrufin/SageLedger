@@ -39,22 +39,11 @@ jobs:
         with:
           gradle-version: '9.3.1'
 
-      - name: Materialize debug keystore & Google services config
+      - name: Materialize Google services config
         id: config
         env:
-          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
-            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > debug.keystore
-          elif [ -f debug.keystore.base64 ]; then
-            base64 -d debug.keystore.base64 > debug.keystore
-          elif [ ! -f debug.keystore ]; then
-            keytool -genkeypair -v -keystore debug.keystore -storepass android \
-              -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
-              -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          fi
-
           if [ -n "$GOOGLE_SERVICES_JSON" ] && [ ! -f app/google-services.json ]; then
             printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
           fi
@@ -63,14 +52,32 @@ jobs:
             echo "has_google_services=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_google_services=false" >> "$GITHUB_OUTPUT"
-            echo "Notice: app/google-services.json is not present. Skipping apk/ overwrite so the prebuilt Firebase-configured APK in apk/ is preserved."
+            echo "Google services config is unavailable. The signed APK will not be published."
+          fi
+
+      - name: Prepare release signing key
+        id: signing
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$RELEASE_STORE_PASSWORD" ] && [ -n "$RELEASE_KEY_PASSWORD" ]; then
+            KEYSTORE_PATH="$RUNNER_TEMP/sageledger-upload.jks"
+            printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+            chmod 600 "$KEYSTORE_PATH"
+            echo "keystore_path=$KEYSTORE_PATH" >> "$GITHUB_OUTPUT"
+            echo "has_release_signing=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_release_signing=false" >> "$GITHUB_OUTPUT"
+            echo "Release signing secrets are not configured. The workflow will run tests but will not publish a debug APK."
           fi
 
       - name: Compute build version
         id: version
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            VER_NAME="${GITHUB_REF#refs/tags/v}"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VER_NAME=$(printf '%s' "$GITHUB_REF_NAME" | sed 's/^v//')
           else
             VER_NAME="1.0.$((GITHUB_RUN_NUMBER + 13))"
           fi
@@ -78,39 +85,63 @@ jobs:
           echo "version_name=$VER_NAME" >> "$GITHUB_OUTPUT"
           echo "version_code=$VER_CODE" >> "$GITHUB_OUTPUT"
 
-      - name: Build Debug APK & Run Unit Tests
-        run: |
-          gradle :app:assembleDebug :app:testDebugUnitTest \
-            -PsageVersionName="${{ steps.version.outputs.version_name }}" \
-            -PsageVersionCode="${{ steps.version.outputs.version_code }}"
+      - name: Run unit tests
+        run: gradle :app:testDebugUnitTest
 
-      - name: Update apk download folder
-        if: steps.config.outputs.has_google_services == 'true'
+      - name: Build signed release APK
+        if: steps.config.outputs.has_google_services == 'true' && steps.signing.outputs.has_release_signing == 'true'
+        env:
+          SAGE_VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          SAGE_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          KEYSTORE_PATH: ${{ steps.signing.outputs.keystore_path }}
+          STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          gradle :app:assembleRelease \
+            -PsageVersionName="$SAGE_VERSION_NAME" \
+            -PsageVersionCode="$SAGE_VERSION_CODE"
+
+      - name: Update APK download folder
+        if: steps.config.outputs.has_google_services == 'true' && steps.signing.outputs.has_release_signing == 'true'
+        env:
+          SAGE_VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          SAGE_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           mkdir -p apk
-          cp app/build/outputs/apk/debug/app-debug.apk apk/SageLedger-latest.apk
-          cat <<EOF > apk/version.json
-          {
-            "versionName": "${{ steps.version.outputs.version_name }}",
-            "versionCode": ${{ steps.version.outputs.version_code }},
-            "apkFile": "SageLedger-latest.apk",
-            "notes": "Automated GitHub build v${{ steps.version.outputs.version_name }} (commit ${GITHUB_SHA::7})."
+          cp app/build/outputs/apk/release/app-release.apk apk/SageLedger-latest.apk
+          python3 - <<'PY'
+          import json
+          import os
+
+          version_name = os.environ["SAGE_VERSION_NAME"]
+          payload = {
+              "versionName": version_name,
+              "versionCode": int(os.environ["SAGE_VERSION_CODE"]),
+              "apkFile": "SageLedger-latest.apk",
+              "notes": f"Automated GitHub build v{version_name} (commit {os.environ['COMMIT_SHA'][:7]}).",
           }
-          EOF
+          with open("apk/version.json", "w", encoding="utf-8") as manifest:
+              json.dump(payload, manifest, indent=2)
+              manifest.write("\n")
+          PY
 
       - name: Commit updated APK to repo
-        if: github.event_name != 'release' && steps.config.outputs.has_google_services == 'true'
+        if: github.event_name != 'release' && steps.config.outputs.has_google_services == 'true' && steps.signing.outputs.has_release_signing == 'true'
+        env:
+          SAGE_VERSION_NAME: ${{ steps.version.outputs.version_name }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add apk/SageLedger-latest.apk apk/version.json
           if ! git diff --cached --quiet; then
-            git commit -m "chore(apk): update SageLedger-latest.apk to v${{ steps.version.outputs.version_name }}"
+            git commit -m "chore(apk): update SageLedger-latest.apk to v$SAGE_VERSION_NAME"
             git push
           fi
 
-      - name: Upload APK workflow artifact
+      - name: Upload signed APK workflow artifact
+        if: steps.config.outputs.has_google_services == 'true' && steps.signing.outputs.has_release_signing == 'true'
         uses: actions/upload-artifact@v6
         with:
           name: SageLedger-v${{ steps.version.outputs.version_name }}
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/release/app-release.apk

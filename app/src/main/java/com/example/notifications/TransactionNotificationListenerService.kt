@@ -71,7 +71,6 @@ class TransactionNotificationListenerService : NotificationListenerService() {
                 val currency = repository.getCurrencyOnce(uid)
                 val catResult = categorizer.categorizeWithFallback(
                     merchant = parsed.merchant,
-                    rawSnippet = parsed.rawSnippet,
                     userRules = userRules
                 )
                 val saveResult = repository.addTransaction(
