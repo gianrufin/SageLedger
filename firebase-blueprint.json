@@ -2,11 +2,11 @@
   "entities": {
     "Transaction": {
       "title": "Transaction",
-      "description": "A user spending record captured from Wallet, card, SMS notification, quick-add preset, or manual entry.",
+      "description": "A user spending record captured from Wallet, E-Wallet, card, SMS notification, quick-add preset, or manual entry.",
       "type": "object",
       "properties": {
-        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
-        "merchant": { "type": "string", "description": "Store or merchant display name (1-120 chars)." },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$", "description": "Owner Firebase Auth UID." },
+        "merchant": { "type": "string", "minLength": 1, "maxLength": 120, "description": "Store or merchant display name (1-120 chars)." },
         "amountCents": { "type": "integer", "description": "Transaction amount in minor currency units (cents)." },
         "category": {
           "type": "string",
@@ -14,14 +14,14 @@
         },
         "paymentSource": {
           "type": "string",
-          "enum": ["GOOGLE_PAY", "CREDIT_CARD", "SMS_ALERT", "CASH", "MANUAL"]
+          "enum": ["GOOGLE_PAY", "E_WALLET", "CREDIT_CARD", "SMS_ALERT", "CASH", "MANUAL"]
         },
-        "note": { "type": "string", "description": "Optional user reconciliation note (0-300 chars)." },
-        "rawSnippet": { "type": "string", "description": "Optional captured notification text snippet (0-500 chars)." },
+        "note": { "type": "string", "minLength": 0, "maxLength": 300, "description": "Optional user reconciliation note (0-300 chars)." },
+        "rawSnippet": { "type": "string", "minLength": 0, "maxLength": 500, "description": "Optional captured notification text snippet (0-500 chars)." },
         "occurredAtMillis": { "type": "integer", "description": "Epoch milliseconds when the purchase occurred." },
         "needsReview": { "type": "boolean", "description": "True if auto-captured and awaiting user confirmation." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." },
-        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." }
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp (serverTimestamp())." }
       },
       "required": ["userId", "merchant", "amountCents", "category", "paymentSource", "note", "occurredAtMillis", "needsReview", "createdAt", "updatedAt"]
     },
@@ -30,7 +30,7 @@
       "description": "Monthly spending cap configured per spending category.",
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
         "category": {
           "type": "string",
           "enum": ["FOOD", "GROCERIES", "TRANSPORT_FUEL", "CONVENIENCE", "GADGETS", "UTILITIES", "SHOPPING", "OTHER"]
@@ -46,9 +46,9 @@
       "description": "One-tap quick-add recurring expense shortcut.",
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
-        "label": { "type": "string" },
-        "merchant": { "type": "string" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "merchant": { "type": "string", "minLength": 1, "maxLength": 120 },
         "amountCents": { "type": "integer" },
         "category": {
           "type": "string",
@@ -56,7 +56,7 @@
         },
         "paymentSource": {
           "type": "string",
-          "enum": ["GOOGLE_PAY", "CREDIT_CARD", "SMS_ALERT", "CASH", "MANUAL"]
+          "enum": ["GOOGLE_PAY", "E_WALLET", "CREDIT_CARD", "SMS_ALERT", "CASH", "MANUAL"]
         },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
@@ -68,8 +68,8 @@
       "description": "User-learned keyword-to-category override for automatic store classification.",
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
-        "merchantKeyword": { "type": "string" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "merchantKeyword": { "type": "string", "minLength": 1, "maxLength": 100 },
         "category": {
           "type": "string",
           "enum": ["FOOD", "GROCERIES", "TRANSPORT_FUEL", "CONVENIENCE", "GADGETS", "UTILITIES", "SHOPPING", "OTHER"]
@@ -84,11 +84,11 @@
       "description": "User income target, overall monthly budget, currency, and GitHub update repository.",
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
         "monthlyIncomeCents": { "type": "integer" },
         "monthlyBudgetCents": { "type": "integer" },
         "currencyCode": { "type": "string", "enum": ["USD", "PHP", "EUR", "GBP", "JPY", "SGD", "AUD", "CAD"] },
-        "githubRepo": { "type": "string" },
+        "githubRepo": { "type": "string", "minLength": 0, "maxLength": 120 },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },

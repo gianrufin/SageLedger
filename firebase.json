@@ -1,7 +1,7 @@
 {
   "firestore": [
     {
-      "database": "ai-studio-android-sageledg-b3129cfd-87b7-4e44-8114-5b3fc057fe61",
+      "database": "ai-studio-sageledger-148ff688-46e7-45b1-a644-87aa03ea6c9e",
       "rules": "firestore.rules"
     }
   ],
