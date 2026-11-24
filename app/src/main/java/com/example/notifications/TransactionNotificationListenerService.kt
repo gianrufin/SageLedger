@@ -81,7 +81,6 @@ class TransactionNotificationListenerService : NotificationListenerService() {
                     category = catResult.category,
                     paymentSource = parsed.paymentSource,
                     note = "",
-                    rawSnippet = parsed.rawSnippet,
                     occurredAtMillis = sbn.postTime.takeIf { it > 0L } ?: now,
                     needsReview = true
                 )
