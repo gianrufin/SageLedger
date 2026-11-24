@@ -111,7 +111,6 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -297,10 +296,8 @@ private fun AuthenticatedLedgerShell(
         factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY])
-                val databaseId = app.getString(R.string.firestore_database_id)
-                val db = FirebaseFirestore.getInstance(databaseId)
                 LedgerViewModel(
-                    repository = LedgerRepository(db),
+                    repository = LedgerRepository(app),
                     preferencesStore = AppPreferencesStore(app),
                     categorizer = MerchantCategorizer(),
                     gitHubUpdateRepository = GitHubUpdateRepository(),
@@ -537,6 +534,7 @@ private fun AuthenticatedLedgerShell(
                                 onCheckGitHubUpdate = { repo ->
                                     viewModel.checkGitHubUpdates(repo, showNoUpdateToast = true)
                                 },
+                                onRestoreLegacyRecords = { viewModel.restoreLegacyRecords() },
                                 onSignOut = {
                                     performSignOut(
                                         credentialManager = credentialManager,

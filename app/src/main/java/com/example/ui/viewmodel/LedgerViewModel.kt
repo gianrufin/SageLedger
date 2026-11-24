@@ -174,6 +174,12 @@ class LedgerViewModel(
 
     init {
         viewModelScope.launch {
+            repository.migrateLegacyRecordsIfNeeded(currentUserId)
+                .onSuccess { count ->
+                    if (count > 0) {
+                        _statusMessage.value = "Restored $count previous record${if (count == 1) "" else "s"}"
+                    }
+                }
             repository.ensureDefaultSettings(currentUserId)
         }
         viewModelScope.launch {
@@ -184,6 +190,22 @@ class LedgerViewModel(
                     checkGitHubUpdates(repo, showNoUpdateToast = false)
                 }
             }
+        }
+    }
+
+    fun restoreLegacyRecords() {
+        viewModelScope.launch {
+            repository.migrateLegacyRecordsIfNeeded(currentUserId)
+                .onSuccess { count ->
+                    _statusMessage.value = if (count > 0) {
+                        "Restored $count previous record${if (count == 1) "" else "s"}"
+                    } else {
+                        "No earlier records found to restore."
+                    }
+                }
+                .onFailure { err ->
+                    _statusMessage.value = err.localizedMessage ?: "Could not restore previous records."
+                }
         }
     }
 

@@ -14,6 +14,7 @@ import com.example.data.model.UserFinanceSettings
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -23,18 +24,31 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
 
 class LedgerRepository(
     private val db: FirebaseFirestore,
-    private val auth: FirebaseAuth = Firebase.auth
+    private val auth: FirebaseAuth = Firebase.auth,
+    private val legacyDbProvider: (() -> FirebaseFirestore?)? = null
 ) {
     constructor(context: Context) : this(
         db = FirebaseFirestore.getInstance(
             context.applicationContext.getString(R.string.firestore_database_id)
-        )
+        ),
+        legacyDbProvider = {
+            val activeDbId = context.applicationContext.getString(R.string.firestore_database_id)
+            if (activeDbId != LEGACY_ANDROID_DATABASE_ID) {
+                runCatching { FirebaseFirestore.getInstance(LEGACY_ANDROID_DATABASE_ID) }.getOrNull()
+            } else {
+                null
+            }
+        }
     )
+
+    private val migrationMutex = Mutex()
 
     private fun requireActiveUid(expectedUid: String? = null): String {
         val uid = auth.currentUser?.uid
@@ -516,6 +530,270 @@ class LedgerRepository(
         }
     }
 
+    suspend fun migrateLegacyRecordsIfNeeded(userId: String): Result<Int> = migrationMutex.withLock {
+        val docPath = "users/$userId"
+        return@withLock try {
+            val uid = requireActiveUid(userId)
+            val legacyDb = legacyDbProvider?.invoke() ?: return@withLock Result.success(0)
+            if (legacyDb === db) return@withLock Result.success(0)
+
+            var migratedCount = 0
+            val pendingWrites = mutableListOf<Pair<com.google.firebase.firestore.DocumentReference, Map<String, Any>>>()
+
+            val legacyTxSnap = readLegacyOrNull {
+                legacyDb.collection("users").document(uid).collection("transactions")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+            }
+            if (legacyTxSnap != null && !legacyTxSnap.isEmpty) {
+                val existingTxIds = db.collection("users").document(uid).collection("transactions")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+                    .documents
+                    .mapTo(HashSet()) { it.id }
+
+                for (doc in legacyTxSnap.documents) {
+                    val targetId = safeDocId(doc.id, "legacy_tx")
+                    if (targetId in existingTxIds) continue
+                    val tx = doc.toObject(
+                        SpendingTransaction::class.java,
+                        DocumentSnapshot.ServerTimestampBehavior.ESTIMATE
+                    ) ?: continue
+                    val cleanMerchant = tx.merchant.trim().take(120)
+                    if (cleanMerchant.isEmpty() || tx.amountCents !in 1L..1_000_000_000L) continue
+                    val safeOccurredAt = tx.occurredAtMillis.takeIf { it > 0L }
+                        ?: tx.createdAt?.toDate()?.time
+                        ?: System.currentTimeMillis()
+                    val normalized = SpendingTransaction(
+                        userId = uid,
+                        merchant = cleanMerchant,
+                        amountCents = tx.amountCents,
+                        category = SpendingCategory.fromRaw(tx.category).name,
+                        paymentSource = PaymentSource.fromRaw(tx.paymentSource).name,
+                        note = tx.note.trim().take(300),
+                        rawSnippet = tx.rawSnippet?.trim()?.take(500)?.takeIf { it.isNotEmpty() },
+                        occurredAtMillis = safeOccurredAt,
+                        needsReview = tx.needsReview
+                    )
+                    val targetRef = db.collection("users").document(uid)
+                        .collection("transactions").document(targetId)
+                    pendingWrites.add(targetRef to normalized.toCreateMap(uid))
+                    existingTxIds.add(targetId)
+                }
+            }
+
+            val legacyBudgetsSnap = readLegacyOrNull {
+                legacyDb.collection("users").document(uid).collection("budgets")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+            }
+            if (legacyBudgetsSnap != null && !legacyBudgetsSnap.isEmpty) {
+                val existingBudgetIds = db.collection("users").document(uid).collection("budgets")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+                    .documents
+                    .mapTo(HashSet()) { it.id }
+
+                for (doc in legacyBudgetsSnap.documents) {
+                    val budget = doc.toObject(
+                        CategoryBudget::class.java,
+                        DocumentSnapshot.ServerTimestampBehavior.ESTIMATE
+                    ) ?: continue
+                    val cat = SpendingCategory.fromRaw(budget.category.ifBlank { doc.id })
+                    if (cat.name in existingBudgetIds) continue
+                    val limitCents = budget.monthlyLimitCents.coerceIn(0L, 1_000_000_000L)
+                    val targetRef = db.collection("users").document(uid)
+                        .collection("budgets").document(cat.name)
+                    pendingWrites.add(
+                        targetRef to mapOf(
+                            "userId" to uid,
+                            "category" to cat.name,
+                            "monthlyLimitCents" to limitCents,
+                            "createdAt" to FieldValue.serverTimestamp(),
+                            "updatedAt" to FieldValue.serverTimestamp()
+                        )
+                    )
+                    existingBudgetIds.add(cat.name)
+                }
+            }
+
+            val legacyPresetsSnap = readLegacyOrNull {
+                legacyDb.collection("users").document(uid).collection("recurringPresets")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+            }
+            if (legacyPresetsSnap != null && !legacyPresetsSnap.isEmpty) {
+                val existingPresetIds = db.collection("users").document(uid).collection("recurringPresets")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+                    .documents
+                    .mapTo(HashSet()) { it.id }
+
+                for (doc in legacyPresetsSnap.documents) {
+                    val targetId = safeDocId(doc.id, "legacy_preset")
+                    if (targetId in existingPresetIds) continue
+                    val preset = doc.toObject(
+                        RecurringPreset::class.java,
+                        DocumentSnapshot.ServerTimestampBehavior.ESTIMATE
+                    ) ?: continue
+                    val cleanLabel = preset.label.trim().take(40)
+                    val cleanMerchant = preset.merchant.trim().take(120)
+                    if (cleanLabel.isEmpty() || cleanMerchant.isEmpty() || preset.amountCents !in 1L..1_000_000_000L) {
+                        continue
+                    }
+                    val targetRef = db.collection("users").document(uid)
+                        .collection("recurringPresets").document(targetId)
+                    pendingWrites.add(
+                        targetRef to mapOf(
+                            "userId" to uid,
+                            "label" to cleanLabel,
+                            "merchant" to cleanMerchant,
+                            "amountCents" to preset.amountCents,
+                            "category" to preset.categoryEnum.name,
+                            "paymentSource" to preset.paymentSourceEnum.name,
+                            "createdAt" to FieldValue.serverTimestamp(),
+                            "updatedAt" to FieldValue.serverTimestamp()
+                        )
+                    )
+                    existingPresetIds.add(targetId)
+                }
+            }
+
+            val legacyRulesSnap = readLegacyOrNull {
+                legacyDb.collection("users").document(uid).collection("merchantRules")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+            }
+            if (legacyRulesSnap != null && !legacyRulesSnap.isEmpty) {
+                val existingRuleIds = db.collection("users").document(uid).collection("merchantRules")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .await()
+                    .documents
+                    .mapTo(HashSet()) { it.id }
+
+                for (doc in legacyRulesSnap.documents) {
+                    val rule = doc.toObject(
+                        MerchantRule::class.java,
+                        DocumentSnapshot.ServerTimestampBehavior.ESTIMATE
+                    ) ?: continue
+                    val keyword = rule.merchantKeyword.trim().lowercase(Locale.US).take(100)
+                    if (keyword.isEmpty()) continue
+                    val targetId = if (VALID_DOC_ID_REGEX.matches(doc.id)) {
+                        doc.id
+                    } else {
+                        keyword.replace(Regex("[^a-z0-9_\\-]"), "_").take(120).ifBlank { "rule" }
+                    }
+                    if (targetId in existingRuleIds) continue
+                    val targetRef = db.collection("users").document(uid)
+                        .collection("merchantRules").document(targetId)
+                    pendingWrites.add(
+                        targetRef to mapOf(
+                            "userId" to uid,
+                            "merchantKeyword" to keyword,
+                            "category" to rule.categoryEnum.name,
+                            "createdAt" to FieldValue.serverTimestamp(),
+                            "updatedAt" to FieldValue.serverTimestamp()
+                        )
+                    )
+                    existingRuleIds.add(targetId)
+                }
+            }
+
+            if (pendingWrites.isNotEmpty()) {
+                for (chunk in pendingWrites.chunked(BATCH_WRITE_LIMIT)) {
+                    val batch = db.batch()
+                    chunk.forEach { (ref, payload) -> batch.set(ref, payload) }
+                    batch.commit().await()
+                }
+                migratedCount += pendingWrites.size
+            }
+
+            val legacySettingsSnap = readLegacyOrNull {
+                legacyDb.collection("users").document(uid)
+                    .collection("settings").document("preferences")
+                    .get()
+                    .await()
+            }
+            if (legacySettingsSnap != null && legacySettingsSnap.exists()) {
+                val legacySettings = legacySettingsSnap.toObject(
+                    UserFinanceSettings::class.java,
+                    DocumentSnapshot.ServerTimestampBehavior.ESTIMATE
+                ) ?: UserFinanceSettings(userId = uid)
+                val currentSettingsSnap = db.collection("users").document(uid)
+                    .collection("settings").document("preferences")
+                    .get()
+                    .await()
+                val currentSettings = if (currentSettingsSnap.exists()) {
+                    currentSettingsSnap.toObject(
+                        UserFinanceSettings::class.java,
+                        DocumentSnapshot.ServerTimestampBehavior.ESTIMATE
+                    ) ?: UserFinanceSettings(userId = uid)
+                } else {
+                    null
+                }
+                val shouldCopySettings = currentSettings == null ||
+                    (currentSettings.isUntouchedDefaults() && !legacySettings.isUntouchedDefaults())
+                if (shouldCopySettings) {
+                    saveSettings(
+                        userId = uid,
+                        monthlyIncomeCents = legacySettings.monthlyIncomeCents,
+                        monthlyBudgetCents = legacySettings.monthlyBudgetCents,
+                        currencyCode = legacySettings.currencyCode,
+                        githubRepo = legacySettings.githubRepo
+                    ).getOrThrow()
+                    migratedCount++
+                }
+            }
+
+            Result.success(migratedCount)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            handleFirestoreError(e, OperationType.WRITE, docPath)
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun <T> readLegacyOrNull(block: suspend () -> T): T? {
+        return try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: FirebaseFirestoreException) {
+            if (e.code == FirebaseFirestoreException.Code.NOT_FOUND ||
+                e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED
+            ) {
+                Log.i(TAG, "No accessible legacy records (${e.code}): ${e.message}")
+                null
+            } else {
+                throw e
+            }
+        }
+    }
+
+    private fun UserFinanceSettings.isUntouchedDefaults(): Boolean =
+        monthlyIncomeCents == 400_000L &&
+            monthlyBudgetCents == 240_000L &&
+            currencyCode == "PHP" &&
+            githubRepo.isBlank()
+
+    private fun safeDocId(rawId: String, prefix: String): String {
+        if (VALID_DOC_ID_REGEX.matches(rawId)) return rawId
+        val sanitized = rawId.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
+            .trim('_')
+            .take(100)
+            .ifBlank { rawId.hashCode().toUInt().toString(16) }
+        return "${prefix}_$sanitized".take(128)
+    }
+
     private fun logStreamErrorIfActive(
         error: Throwable,
         operationType: OperationType,
@@ -530,5 +808,13 @@ class LedgerRepository(
         if (exceptionToLog != null && auth.currentUser?.uid == userId) {
             handleFirestoreError(exceptionToLog, operationType, path)
         }
+    }
+
+    companion object {
+        private const val TAG = "LedgerRepository"
+        const val LEGACY_ANDROID_DATABASE_ID =
+            "ai-studio-android-sageledg-b3129cfd-87b7-4e44-8114-5b3fc057fe61"
+        private const val BATCH_WRITE_LIMIT = 400
+        private val VALID_DOC_ID_REGEX = Regex("^[a-zA-Z0-9_\\-]{1,128}$")
     }
 }

@@ -85,6 +85,7 @@ fun SettingsScreen(
     onSaveMerchantRule: (keyword: String, category: SpendingCategory) -> Unit,
     onDeleteMerchantRule: (String) -> Unit,
     onCheckGitHubUpdate: (repo: String) -> Unit,
+    onRestoreLegacyRecords: () -> Unit = {},
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -591,6 +592,17 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    Text(
+                        text = "Missing earlier entries from a previous build? Restore them into your current ledger.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedButton(
+                        onClick = onRestoreLegacyRecords,
+                        modifier = Modifier.testTag("restore_legacy_records_button")
+                    ) {
+                        Text("Restore previous records")
+                    }
                     OutlinedButton(
                         onClick = onSignOut,
                         modifier = Modifier.testTag("sign_out_button")
