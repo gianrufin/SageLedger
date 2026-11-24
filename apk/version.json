@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0.27",
-  "versionCode": 34,
+  "versionName": "1.0.31",
+  "versionCode": 38,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "Soft Mint Green Editorial (SumDif style) complete design revamp with serene mint canvas, pristine white bento cards, and bold charcoal typography."
+  "notes": "Automated GitHub build v1.0.31 (commit 1ee46fa)."
 }
