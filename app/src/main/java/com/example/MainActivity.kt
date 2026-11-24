@@ -94,6 +94,7 @@ import com.example.data.remote.GitHubUpdateRepository
 import com.example.data.repository.LedgerRepository
 import com.example.notifications.SpendingAlertNotifier
 import com.example.ui.auth.AuthScreen
+import com.example.ui.auth.OnboardingScreen
 import com.example.ui.auth.performSignOut
 import com.example.ui.components.springPressScale
 import com.example.ui.screens.AddRecurringPresetDialog
@@ -115,6 +116,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 
 private const val ROUTE_OVERVIEW = "overview"
 private const val ROUTE_REPORTS = "reports"
@@ -154,6 +156,7 @@ class MainActivity : ComponentActivity() {
 
             SageLedgerTheme(darkTheme = isDark) {
                 SageLedgerRoot(
+                    preferencesStore = preferencesStore,
                     deepLinkTransactionId = deepLinkTransactionId,
                     onConsumeDeepLink = { deepLinkTransactionId = null }
                 )
@@ -170,10 +173,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun SageLedgerRoot(
+    preferencesStore: AppPreferencesStore,
     deepLinkTransactionId: String?,
     onConsumeDeepLink: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val firebaseReady = remember(context) {
         if (FirebaseApp.getApps(context).isEmpty()) {
             runCatching { FirebaseApp.initializeApp(context) }.getOrNull() != null
@@ -184,6 +189,19 @@ private fun SageLedgerRoot(
 
     if (!firebaseReady) {
         FirebaseNotConfiguredScreen()
+        return
+    }
+
+    val onboardingComplete by preferencesStore.onboardingCompleteFlow.collectAsStateWithLifecycle(initialValue = false)
+
+    if (!onboardingComplete) {
+        OnboardingScreen(
+            onFinishOnboarding = {
+                scope.launch {
+                    preferencesStore.setOnboardingComplete(true)
+                }
+            }
+        )
         return
     }
 

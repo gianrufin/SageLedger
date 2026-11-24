@@ -1,6 +1,6 @@
 {
-  "versionName": "1.0.28",
-  "versionCode": 35,
+  "versionName": "1.0.26",
+  "versionCode": 33,
   "apkFile": "SageLedger-latest.apk",
-  "notes": "Automated GitHub build v1.0.28 (commit 0d70f5a)."
+  "notes": "Pastel Mint & Clean White Editorial redesign with first-time onboarding window explaining automatic phone notification capture (Google Wallet, GCash, Maya, E-Wallet, bank SMS) and manual cash addition."
 }
